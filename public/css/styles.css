@@ -1,0 +1,590 @@
+/* Переменные для тем */
+:root {
+  --primary-color: #6f42c1;
+  --primary-hover-color: #5a32a3;
+  --toggle-checked-bg: #6f42c1;
+  --border-color: #495057;
+  --border-hover-color: #6f42c1;
+  --btn-text-color: #212529;
+  --btn-bg-color: #e2e6ea;
+  --btn-border-color: #dae0e5;
+  --btn-hover-bg: #d6dadd;
+  --btn-hover-border: #c8ced3;
+  --background-transparent: transparent;
+}
+body.dark-theme {
+  --primary-color: #6f42c1;
+  --primary-hover-color: #5a32a3;
+  --toggle-checked-bg: #6f42c1;
+  --border-color: #495057;
+  --border-hover-color: #6f42c1;
+  --btn-text-color: #212529;
+  --btn-bg-color: #e2e6ea;
+  --btn-border-color: #dae0e5;
+  --btn-hover-bg: #d6dadd;
+  --btn-hover-border: #c8ced3;
+  --background-transparent: transparent;
+}
+
+/* Основные стили */
+/* body { 
+  background: #f7f7fa; 
+} */
+body.dark-mode {
+  background: #23272f !important;
+  color: #fff !important;
+}
+
+/* ====== СТИЛИ КНОПОК - ПОЛНОСТЬЮ ОДИНАКОВЫ В ОБЕИХ ТЕМАХ ====== */
+/* Применяем стиль btn-custom-light ко всем кнопкам */
+.btn, 
+.btn-primary, 
+.btn-secondary, 
+.btn-success, 
+.btn-danger, 
+.btn-warning, 
+.btn-info, 
+.btn-light, 
+.btn-dark,
+.btn-outline-primary, 
+.btn-outline-secondary, 
+.btn-outline-success, 
+.btn-outline-danger, 
+.btn-outline-warning, 
+.btn-outline-info, 
+.btn-outline-light, 
+.btn-outline-dark,
+.btn-purple, 
+.btn-outline-purple,
+.btn-custom-light {
+  color: var(--btn-text-color) !important;
+  background-color: var(--btn-bg-color) !important;
+  border: 1px solid var(--btn-border-color) !important;
+  border-radius: 4px !important;
+  padding: 0.375rem 0.75rem !important;
+  font-size: 1rem !important;
+  line-height: 1.5 !important;
+  text-align: center !important;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+}
+
+/* Единый стиль наведения для всех кнопок */
+.btn:hover, 
+.btn-primary:hover, 
+.btn-secondary:hover, 
+.btn-success:hover, 
+.btn-danger:hover, 
+.btn-warning:hover, 
+.btn-info:hover, 
+.btn-light:hover, 
+.btn-dark:hover,
+.btn-outline-primary:hover, 
+.btn-outline-secondary:hover, 
+.btn-outline-success:hover, 
+.btn-outline-danger:hover, 
+.btn-outline-warning:hover, 
+.btn-outline-info:hover, 
+.btn-outline-light:hover, 
+.btn-outline-dark:hover,
+.btn-purple:hover, 
+.btn-outline-purple:hover,
+.btn-custom-light:hover {
+  color: var(--btn-text-color) !important;
+  background-color: var(--btn-hover-bg) !important;
+  border-color: var(--btn-hover-border) !important;
+}
+
+/* Единый стиль для фокуса */
+.btn:focus, 
+.btn-primary:focus,
+.btn-secondary:focus,
+.btn-success:focus,
+.btn-danger:focus,
+.btn-warning:focus,
+.btn-info:focus,
+.btn-light:focus,
+.btn-dark:focus,
+.btn-outline-primary:focus,
+.btn-outline-secondary:focus,
+.btn-outline-success:focus,
+.btn-outline-danger:focus,
+.btn-outline-warning:focus,
+.btn-outline-info:focus,
+.btn-outline-light:focus,
+.btn-outline-dark:focus,
+.btn-purple:focus,
+.btn-outline-purple:focus,
+.btn-custom-light:focus,
+.btn.focus, 
+.btn-primary.focus,
+.btn-secondary.focus,
+.btn-success.focus,
+.btn-danger.focus,
+.btn-warning.focus,
+.btn-info.focus,
+.btn-light.focus,
+.btn-dark.focus,
+.btn-outline-primary.focus,
+.btn-outline-secondary.focus,
+.btn-outline-success.focus,
+.btn-outline-danger.focus,
+.btn-outline-warning.focus,
+.btn-outline-info.focus,
+.btn-outline-light.focus,
+.btn-outline-dark.focus,
+.btn-purple.focus,
+.btn-outline-purple.focus,
+.btn-custom-light.focus {
+  box-shadow: 0 0 0 0.2rem rgba(216, 217, 219, 0.5) !important;
+  outline: none !important;
+  color: var(--btn-text-color) !important;
+  background-color: var(--btn-hover-bg) !important;
+  border-color: var(--btn-hover-border) !important;
+}
+
+/* Единый стиль для активного состояния */
+.btn:active, 
+.btn-primary:active,
+.btn-secondary:active,
+.btn-success:active,
+.btn-danger:active,
+.btn-warning:active,
+.btn-info:active,
+.btn-light:active,
+.btn-dark:active,
+.btn-outline-primary:active,
+.btn-outline-secondary:active,
+.btn-outline-success:active,
+.btn-outline-danger:active,
+.btn-outline-warning:active,
+.btn-outline-info:active,
+.btn-outline-light:active,
+.btn-outline-dark:active,
+.btn-purple:active,
+.btn-outline-purple:active,
+.btn-custom-light:active,
+.btn.active, 
+.btn-primary.active,
+.btn-secondary.active,
+.btn-success.active,
+.btn-danger.active,
+.btn-warning.active,
+.btn-info.active,
+.btn-light.active,
+.btn-dark.active,
+.btn-outline-primary.active,
+.btn-outline-secondary.active,
+.btn-outline-success.active,
+.btn-outline-danger.active,
+.btn-outline-warning.active,
+.btn-outline-info.active,
+.btn-outline-light.active,
+.btn-outline-dark.active,
+.btn-purple.active,
+.btn-outline-purple.active,
+.btn-custom-light.active {
+  color: var(--btn-text-color) !important;
+  background-color: var(--btn-hover-bg) !important;
+  border-color: var(--btn-hover-border) !important;
+  box-shadow: 0 0 0 0.2rem rgba(216, 217, 219, 0.5) !important;
+}
+
+/* Сброс состояния после действия */
+.btn:focus:not(:focus-visible), 
+.btn:active:not(:active:focus-visible) {
+  background-color: var(--btn-bg-color) !important;
+  border-color: var(--btn-border-color) !important;
+  color: var(--btn-text-color) !important;
+  box-shadow: none !important;
+}
+
+/* Удаление обводки для инпутов при фокусе */
+input:focus, input.focus,
+.form-control:focus, .form-control.focus,
+.form-select:focus, .form-select.focus,
+textarea:focus, textarea.focus,
+*:focus {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Фиолетовая тема для фона */
+.bg-purple {
+  background-color: #6f42c1 !important;
+  color: white !important;
+}
+
+/* Статусы и индикаторы */
+.status-dot { 
+  font-size: 1.2em; 
+}
+.online { 
+  color: #28a745; 
+}
+.offline { 
+  color: #dc3545; 
+}
+
+/* Таблицы */
+.device-table th, 
+.device-table td { 
+  padding: 12px 8px; 
+  vertical-align: middle;
+}
+
+.device-table tr {
+  height: 56px; /* Фиксированная высота строки таблицы */
+}
+
+.table-responsive { 
+  margin-top: 20px; 
+}
+
+/* Фильтры и контейнеры */
+.filter-row { 
+  margin-bottom: 20px; 
+}
+#chart-container { 
+  max-width: 800px; 
+  height: 600px; 
+  margin: 0 auto; 
+}
+
+/* Верхнее меню */
+.top-menu { 
+  background-color: var(--primary-color); 
+  color: white; 
+  padding: 10px 0; 
+}
+.top-menu a { 
+  color: white; 
+  padding: 10px 15px; 
+  text-decoration: none; 
+  display: inline-block; 
+}
+.top-menu a:hover, 
+.top-menu a.active { 
+  background-color: rgba(255, 255, 255, 0.2); 
+}
+
+/* Красивые переключатели */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+/* Центрирование переключателей в ячейках таблицы */
+td.text-center {
+  vertical-align: middle;
+  height: 50px; /* Минимальная высота ячейки для лучшего вертикального позиционирования */
+}
+
+td.text-center .toggle-switch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 34px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+  background-color: var(--primary-color);
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(26px);
+}
+
+/* Кнопки действий */
+.action-buttons .btn {
+  margin-right: 5px;
+  border-radius: 50px;
+  padding: 0.375rem 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.action-buttons .btn i {
+  margin-right: 5px;
+}
+
+/* Переключатели и формы */
+.form-check-input.large-switch {
+  transform: scale(1.3); 
+  margin-left: -30px;
+}
+.form-check-label.large-label {
+  font-size: 1.1rem;
+  margin-left: 8px;
+}
+
+/* Контейнер уведомлений */
+#toastContainer {
+  z-index: 1100;
+}
+
+/* Модальные окна */
+.modal-header {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.modal-header .btn-close {
+  color: white;
+}
+
+/* Крестик закрытия в темной теме */
+body.dark-theme .offcanvas-header .btn-close,
+body.dark-theme .modal-header .btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* Анимации */
+.animated-btn {
+  transition: all 0.3s ease;
+}
+
+.animated-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Графики в модальном окне */
+.chart-modal .modal-dialog {
+  max-width: 800px;
+}
+
+.chart-container {
+  width: 100%;
+  height: 400px;
+  margin: 0 auto;
+}
+
+footer {
+  border-top: 1px solid #e0e0e0;
+}
+body.dark-theme footer {
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+body.dark-theme input::placeholder,
+body.dark-theme .form-control::placeholder,
+body.dark-theme .form-select::placeholder {
+  color: #e5e5e5 !important;
+  opacity: 1 !important;
+}
+
+body.dark-theme .card, 
+body.dark-theme .modal-content,
+body.dark-theme .offcanvas {
+  background-color: var(--color-card) !important;
+  color: var(--color-text) !important;
+}
+
+/* Стили для нижней панели с информацией и графиком */
+.device-detail-offcanvas {
+  height: 80vh !important; /* Высота панели 80% от высоты окна */
+  max-height: 80vh !important;
+}
+
+.device-detail-offcanvas .offcanvas-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.device-detail-offcanvas .table {
+  margin-bottom: 0;
+}
+
+.device-detail-offcanvas .chart-container {
+  height: 400px;
+  width: 100%;
+}
+
+/* Для мобильных устройств */
+@media (max-width: 768px) {
+  .device-detail-offcanvas {
+    height: 90vh !important;
+    max-height: 90vh !important;
+  }
+  
+  .device-detail-offcanvas .row > div {
+    margin-bottom: 1.5rem;
+  }
+  
+  /* На мобильных делаем вертикальный layout */
+  .device-detail-offcanvas .row {
+    flex-direction: column-reverse;
+  }
+  
+  .device-detail-offcanvas .col-md-4,
+  .device-detail-offcanvas .col-md-8 {
+    width: 100%;
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  
+  .device-detail-offcanvas .chart-container {
+    height: 300px;
+  }
+}
+
+/* Исправление для компонента уведомлений */
+.card-header {
+  color: var(--color-text) !important;
+}
+
+/* Стили для Offcanvas */
+.offcanvas-backdrop {
+  background-color: rgba(0, 0, 0, 0.7) !important;
+  opacity: 0 !important;
+  z-index: 1040 !important;
+  transition: opacity 0.5s ease !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.offcanvas-backdrop.show {
+  opacity: 0.7 !important;
+}
+
+.offcanvas-backdrop.fade-out-backdrop {
+  opacity: 0 !important;
+}
+
+.offcanvas {
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+  z-index: 1045 !important;
+  transition: transform 0.4s ease !important;
+}
+
+body.dark-theme .offcanvas {
+  background-color: var(--color-card) !important;
+  color: var(--color-text) !important;
+}
+
+/* Стили для пагинации в темной теме */
+body.dark-theme .pagination .page-link {
+  background-color: var(--color-card);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+body.dark-theme .pagination .page-item.active .page-link {
+  background-color: #6f42c1;
+  border-color: #6f42c1;
+  color: #fff;
+}
+
+body.dark-theme .pagination .page-item.disabled .page-link {
+  background-color: var(--color-card);
+  color: rgba(255, 255, 255, 0.3);
+  border-color: var(--color-border);
+}
+
+body.dark-theme .pagination .page-link:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+/* Информация о пагинации */
+body.dark-theme #paginationInfo {
+  color: var(--color-text);
+}
+
+/* Компактные статистические блоки */
+.dashboard-stats {
+  gap: 12px;
+}
+.stat-card {
+  min-width: 140px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 0 !important;
+}
+.stat-card .stat-title {
+  font-size: 1em;
+  margin: 0;
+  font-weight: 500;
+}
+.stat-card .stat-count {
+  font-size: 1.2em;
+  font-weight: 700;
+  margin: 0;
+}
+@media (max-width: 900px) {
+  .dashboard-stats {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .stat-card {
+    min-width: 120px;
+    padding: 6px 10px;
+  }
+}
+
+.btn-action {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  outline: none;
+  font-size: 1.1rem;
+  transition: box-shadow 0.2s, background 0.2s;
+  margin-right: 4px;
+  color: #fff;
+  background: #888;
+  cursor: pointer;
+}
+.btn-action:last-child { margin-right: 0; }
+.btn-action:active, .btn-action:focus { box-shadow: 0 0 0 2px #fff3; }
+.btn-action i { color: #fff; }
+.btn-blue   { background: #1976d2; }
+.btn-green  { background: #388e3c; }
+.btn-yellow { background: #fbc02d; color: #222; }
+.btn-red    { background: #d32f2f; }
+.btn-action:hover { filter: brightness(1.15); } 

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mine Pulse</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body data-bs-theme="dark">
+  <div id="mainHeader"></div>
+  <div class="container p-3">
+    <h2 class="mb-4">Ошибки в системе</h2>
+    <form class="row g-3 mb-3 align-items-end">
+      <div class="col-12 col-md-10">
+        <label for="errorSearchInput" class="form-label">Поиск</label>
+        <input type="text" class="form-control" id="errorSearchInput" placeholder="Поиск по тексту ошибки...">
+      </div>
+      <div class="col-12 col-md-2 d-flex align-items-end">
+        <button type="button" class="btn btn-outline-danger w-100" onclick="deleteAllErrors()">Удалить все ошибки</button>
+      </div>
+    </form>
+    <div class="bg-dark text-white p-0 mb-4 overflow-auto">
+      <table class="table table-hover table-dark table-bordered mb-0" id="errorsTable" style="font-size: 15px;">
+        <thead>
+          <tr>
+            <th>Время</th>
+            <th>IP-адрес</th>
+            <th>Воркер</th>
+            <th>Текст ошибки</th>
+            <th style="width:90px;" class="text-center">Действие</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Ошибки будут загружены через JS -->
+        </tbody>
+      </table>
+    </div>
+    <div class="d-flex justify-content-between align-items-center mt-3 mb-5">
+      <div id="errorsPaginationInfo" class="text-muted">Показано 0-0 из 0 ошибок</div>
+      <ul class="pagination" id="errorsPagination"></ul>
+    </div>
+  </div>
+  <script>
+    // Вставка меню
+    fetch('/partials/header.html').then(r=>r.text()).then(html=>{
+      document.getElementById('mainHeader').innerHTML = html;
+    });
+    // Пагинация и загрузка ошибок
+    let allErrors = [];
+    let currentPage = 1;
+    let itemsPerPage = 10;
+    async function loadErrors() {
+      const search = document.getElementById('errorSearchInput').value;
+      let url = `/api/errors?`;
+      if (search) url += `search=${encodeURIComponent(search)}&`;
+      const res = await fetch(url);
+      allErrors = await res.json();
+      currentPage = 1;
+      renderErrors();
+      renderErrorsPagination();
+    }
+    function renderErrors() {
+      const tbody = document.querySelector('#errorsTable tbody');
+      const start = (currentPage - 1) * itemsPerPage;
+      const paginated = allErrors.slice(start, start + itemsPerPage);
+      tbody.innerHTML = paginated.map(err => `
+        <tr>
+          <td>${new Date(err.timestamp).toLocaleString()}</td>
+          <td>${err.ip || '-'}</td>
+          <td>${err.worker || '-'}</td>
+          <td style="max-width:300px;word-break:break-all;">${err.error}</td>
+          <td class="text-center">${err._id ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteErrorById('${err._id}')"><i class="bi bi-trash"></i></button>` : ''}</td>
+        </tr>
+      `).join('');
+      // Счётчик
+      const info = document.getElementById('errorsPaginationInfo');
+      const end = Math.min(start + itemsPerPage, allErrors.length);
+      info.textContent = `Показано ${allErrors.length ? start+1 : 0}-${end} из ${allErrors.length} ошибок`;
+    }
+    function renderErrorsPagination() {
+      const totalPages = Math.ceil(allErrors.length / itemsPerPage);
+      const pagination = document.getElementById('errorsPagination');
+      let html = `
+        <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+          <a class="page-link" href="#" onclick="goToErrorsPage(${currentPage - 1}); return false;">&laquo;</a>
+        </li>
+      `;
+      const maxPages = 5;
+      let startPage = Math.max(1, currentPage - Math.floor(maxPages/2));
+      let endPage = Math.min(totalPages, startPage + maxPages - 1);
+      if (endPage - startPage + 1 < maxPages) {
+        startPage = Math.max(1, endPage - maxPages + 1);
+      }
+      for (let i = startPage; i <= endPage; i++) {
+        html += `
+          <li class="page-item ${i === currentPage ? 'active' : ''}">
+            <a class="page-link" href="#" onclick="goToErrorsPage(${i}); return false;">${i}</a>
+          </li>
+        `;
+      }
+      html += `
+        <li class="page-item ${currentPage === totalPages || totalPages === 0 ? 'disabled' : ''}">
+          <a class="page-link" href="#" onclick="goToErrorsPage(${currentPage + 1}); return false;">&raquo;</a>
+        </li>
+      `;
+      pagination.innerHTML = html;
+    }
+    window.goToErrorsPage = function(page) {
+      const totalPages = Math.ceil(allErrors.length / itemsPerPage);
+      if (page < 1 || page > totalPages) return;
+      currentPage = page;
+      renderErrors();
+      renderErrorsPagination();
+    }
+    document.getElementById('errorSearchInput').oninput = function() {
+      setTimeout(loadErrors, 300);
+    };
+    loadErrors();
+  </script>
+  <script src="js/errors.js"></script>
+</body>
+</html> 

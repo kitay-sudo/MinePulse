@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mine Pulse</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .form-switch .form-check-input { width: 2.5em; height: 1.5em; }
+  </style>
+</head>
+<body data-bs-theme="dark">
+  <div id="mainHeader"></div>
+  <div class="container p-3">
+    <h2 class="mb-4">Настройки</h2>
+    <!-- Telegram -->
+    <div class="card mb-4">
+      <div class="card-header">Telegram уведомления</div>
+      <div class="card-body">
+        <div class="form-check form-switch mb-3 d-flex align-items-center gap-2" style="min-height: 40px;">
+          <input class="form-check-input" type="checkbox" id="telegramEnabledSwitch" style="margin-top:0;">
+          <label class="form-check-label mb-0" for="telegramEnabledSwitch">Включить уведомления</label>
+        </div>
+        <div id="telegramSettingsBlock">
+          <form id="telegramFormFields">
+            <div class="mb-3">
+              <label for="telegramTokenInput" class="form-label">Token</label>
+              <input type="text" class="form-control" id="telegramTokenInput" placeholder="Введите Telegram Token">
+            </div>
+            <div class="mb-3">
+              <label for="telegramChatIdInput" class="form-label">Chat ID</label>
+              <input type="text" class="form-control" id="telegramChatIdInput" placeholder="Введите Chat ID">
+            </div>
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-primary" id="testTelegramBtn">Протестировать</button>
+              <button type="button" class="btn btn-secondary" id="editTelegramBtn">Изменить</button>
+              <button type="button" class="btn btn-success" id="saveSettingsBtn">Сохранить</button>
+              <button type="button" class="btn btn-success d-none" id="telegramConnectedBtn" disabled>Подключено</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <!-- MAC to IP -->
+    <div class="card mb-4">
+      <div class="card-header">MAC → IP</div>
+      <div class="card-body">
+        <div class="form-check form-switch mb-3 d-flex align-items-center gap-2" style="min-height: 40px;">
+          <input class="form-check-input" type="checkbox" id="macToIpSwitch" style="margin-top:0;">
+          <label class="form-check-label mb-0" for="macToIpSwitch">Включить автоматический перевод MAC-адресов в IP</label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/settings.js"></script>
+  <script>
+    fetch('/partials/header.html').then(r=>r.text()).then(html=>{
+      document.getElementById('mainHeader').innerHTML = html;
+    });
+  </script>
+</body>
+</html> 

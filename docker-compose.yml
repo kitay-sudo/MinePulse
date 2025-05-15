@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: mine_pulse_web
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    networks:
+      - mine_pulse_net
+
+  monitoring:
+    build: ./monitoring
+    container_name: mine_pulse_monitoring
+    env_file:
+      - .env
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    networks:
+      - mine_pulse_net
+
+  mongo:
+    image: mongo:6
+    container_name: mine_pulse_mongo
+    restart: unless-stopped
+    volumes:
+      - mine_pulse_data:/data/db
+    networks:
+      - mine_pulse_net
+
+volumes:
+  mine_pulse_data:
+
+networks:
+  mine_pulse_net:
+    driver: bridge

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mine Pulse</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body data-bs-theme="dark">
+  <div id="mainHeader"></div>
+  <div class="container p-3">
+    <h2 class="mb-4">Модели устройств</h2>
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <input type="text" class="form-control" id="searchModelInput" placeholder="Поиск по названию...">
+      </div>
+      <div class="col-md-6 text-end">
+        <button class="btn btn-primary" id="addModelBtn" data-bs-toggle="modal" data-bs-target="#modelModal">Добавить</button>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-dark table-bordered" id="modelsTable">
+        <thead>
+          <tr>
+            <th>Название</th>
+            <th>Потребление (Вт)</th>
+            <th style="width:60px;">Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Данные будут подгружаться через JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <!-- Модальное окно добавления модели -->
+  <div class="modal fade" id="modelModal" tabindex="-1" aria-labelledby="modelModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modelModalTitle">Добавить модель</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+        </div>
+        <div class="modal-body">
+          <form id="modelForm">
+            <div class="mb-3">
+              <label for="modelName" class="form-label">Название модели</label>
+              <input type="text" class="form-control" id="modelName" required>
+            </div>
+            <div class="mb-3">
+              <label for="modelConsumption" class="form-label">Потребление (Вт)</label>
+              <input type="number" class="form-control" id="modelConsumption" required min="0">
+            </div>
+            <div class="text-end">
+              <button type="submit" class="btn btn-success">Сохранить</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/device-models.js"></script>
+  <script>
+    fetch('/partials/header.html').then(r=>r.text()).then(html=>{
+      document.getElementById('mainHeader').innerHTML = html;
+    });
+  </script>
+</body>
+</html> 

@@ -1,0 +1,15 @@
+{
+  "name": "mine_pulse_monitoring",
+  "version": "1.0.0",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "mongoose": "^7.0.0",
+    "ping": "^0.4.0",
+    "p-limit": "^4.0.0"
+  }
+} 

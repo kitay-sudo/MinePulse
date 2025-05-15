@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <!-- Bootstrap 5.3+ CSS (dark) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mine Pulse</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .card-stat { min-height:110px; }
+    .btn-icon { border: none; border-radius: 999px; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; }
+    .table .form-check-input {
+      width: 1.5em;
+      height: 1.5em;
+      margin: 0 auto;
+      display: block;
+    }
+    .table td, .table th {
+      vertical-align: middle !important;
+      text-align: center;
+    }
+  </style>
+</head>
+<body data-bs-theme="dark">
+  <div id="mainHeader"></div>
+  <div class="container-lg py-4 px-2 px-md-4">
+    <!-- Статистика -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-4 col-lg-2">
+        <div class="card bg-dark text-white text-center">
+          <div class="card-body">
+            <div class="h2 mb-1"><span id="devicesCount">0</span></div>
+            <div class="text-muted">Всего</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-lg-2">
+        <div class="card bg-dark text-white text-center">
+          <div class="card-body">
+            <div class="h2 mb-1"><span id="devicesOnline">0</span></div>
+            <div class="text-muted">Онлайн</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-lg-2">
+        <div class="card bg-dark text-white text-center">
+          <div class="card-body">
+            <div class="h2 mb-1"><span id="devicesOffline">0</span></div>
+            <div class="text-muted">Оффлайн</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-lg-2">
+        <div class="card bg-dark text-white text-center">
+          <div class="card-body">
+            <div class="h2 mb-1"><span id="devicesRepair">0</span></div>
+            <div class="text-muted">В ремонте</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-lg-2">
+        <div class="card bg-dark text-white text-center">
+          <div class="card-body">
+            <div class="h2 mb-1"><span id="totalConsumption">0 Вт</span></div>
+            <div class="text-muted">Потребление</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-lg-2">
+        <div class="card bg-dark text-white text-center">
+          <div class="card-body">
+            <div class="h2 mb-1"><span id="errorsCount">0</span></div>
+            <div class="text-muted"> <a href="/errors.html" class="">Посмотреть ошибки</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Фильтры -->
+    <form class="row g-2 mb-4 align-items-end flex-nowrap">
+      <div class="col-auto">
+        <label for="statusFilter" class="form-label mb-0">Статус</label>
+        <select class="form-select form-select-sm" id="statusFilter">
+          <option value="all" selected>Все</option>
+          <option value="online">В сети</option>
+          <option value="offline">Не в сети</option>
+        </select>
+      </div>
+      <div class="col-auto">
+        <label for="repairFilter" class="form-label mb-0">Ремонт</label>
+        <select class="form-select form-select-sm" id="repairFilter">
+          <option value="all" selected>Все</option>
+          <option value="inRepair">В ремонте</option>
+          <option value="notInRepair">Не в ремонте</option>
+        </select>
+      </div>
+      <div class="col flex-grow-1">
+        <label for="searchInput" class="form-label mb-0">Поиск</label>
+        <input type="text" class="form-control form-control-sm" id="searchInput" placeholder="Поиск по IP, названию...">
+      </div>
+      <div class="col-auto">
+        <label for="itemsPerPage" class="form-label mb-0">Записей</label>
+        <select class="form-select form-select-sm" id="itemsPerPage">
+          <option value="10" selected>10</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+        </select>
+      </div>
+      <div class="col-auto d-flex align-items-end gap-2">
+        <button class="btn btn-outline-secondary btn-sm" id="resetFiltersBtn" type="button">Сбросить</button>
+        <button class="btn btn-primary btn-sm" id="quickAddDeviceBtn" data-bs-toggle="modal" data-bs-target="#deviceModal" type="button">Добавить</button>
+        <button class="btn btn-outline-success btn-sm p-0 d-flex align-items-center justify-content-center" id="toggleMonitoringBtn" type="button" style="width:32px;height:32px;" title="Включить/выключить мониторинг">
+          <i id="monitoringStatusIcon" class="bi bi-power"></i>
+        </button>
+      </div>
+    </form>
+    <!-- Алерты -->
+    <div id="noDevicesMessage" class="alert alert-info d-none" role="alert">
+      <h5 class="alert-heading">Информация</h5>
+      <i class="bi bi-info-circle"></i> Устройства не найдены. Добавьте новые устройства или просканируйте сеть.
+    </div>
+    <div id="filtersActiveMessage" class="alert alert-warning d-none" role="alert">
+      <h5 class="alert-heading">Внимание</h5>
+      <i class="bi bi-filter"></i> Применены фильтры. Некоторые устройства могут быть скрыты.
+    </div>
+    <div id="devicesLoadingIndicator" class="alert alert-primary d-none text-center" role="alert">
+      <h5 class="alert-heading">Загрузка...</h5>
+      <div class="spinner-border text-primary" role="status" style="width:1.5rem;height:1.5rem;"></div>
+      <span class="ms-2">Загрузка устройств...</span>
+    </div>
+    <div id="errorsLoadingIndicator" class="alert alert-primary d-none text-center" role="alert">
+      <h5 class="alert-heading">Загрузка...</h5>
+      <div class="spinner-border text-primary" role="status" style="width:1.5rem;height:1.5rem;"></div>
+      <span class="ms-2">Загрузка журнала ошибок...</span>
+    </div>
+    <div id="noErrorsMessage" class="alert alert-success d-none" role="alert">
+      <h5 class="alert-heading">Успех</h5>
+      <i class="bi bi-check-circle"></i> Ошибок не найдено. Система работает в штатном режиме.
+    </div>
+    <div id="errorsActiveMessage" class="alert alert-danger d-none" role="alert">
+      <h5 class="alert-heading">Ошибка</h5>
+      <i class="bi bi-exclamation-triangle"></i> Обнаружены ошибки в системе.
+    </div>
+    <!-- Таблица устройств -->
+    <div class="bg-dark text-white p-0 mb-5 overflow-auto">
+      <table class="table table-hover table-dark table-bordered mb-0" id="devicesTable" style="font-size: 15px;">
+        <thead>
+          <tr>
+            <th>IP-адрес</th>
+            <th>Статус</th>
+            <th>MAC</th>
+            <th style="display:none;">Серийный</th>
+            <th>Воркер</th>
+            <th>Потребление</th>
+            <th>Последнее обновление</th>
+            <th>Опрос</th>
+            <th>Ремонт</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+    <!-- Пагинация -->
+    <div class="d-flex justify-content-between align-items-center mt-3 mb-5">
+      <div id="paginationInfo" class="text-muted">Показано 0-0 из 0 устройств</div>
+      <ul class="pagination" id="pagination"></ul>
+    </div>
+    <!-- Остальной контент (разделы, модалки и т.д.) оставляю без изменений -->
+  </div>
+
+  <!-- Модальное окно добавления/редактирования устройства -->
+  <div class="modal fade" id="deviceModal" tabindex="-1" aria-labelledby="deviceModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deviceModalTitle">Добавить устройство</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+        </div>
+        <div class="modal-body">
+          <form id="deviceForm" class="needs-validation" novalidate>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="deviceIp" class="form-label">IP-адрес</label>
+                  <div class="input-group">
+                    <input type="text" class="form-control" id="deviceIp" pattern="\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}">
+                    <button class="btn btn-outline-secondary" type="button" id="checkIpBtn" onclick="checkIpExists()">
+                      <i class="bi bi-search"></i> Проверить
+                    </button>
+                  </div>
+                  <div class="invalid-feedback">
+                    Введите корректный IP-адрес
+                  </div>
+                  <div id="ipCheckResult" class="form-text mt-2"></div>
+                </div>
+                <div class="mb-3">
+                  <label for="deviceMac" class="form-label">MAC-адрес</label>
+                  <input type="text" class="form-control" id="deviceMac" placeholder="XX:XX:XX:XX:XX:XX" required>
+                </div>
+                <div class="mb-3">
+                  <label for="deviceSerial" class="form-label">Серийный номер</label>
+                  <input type="text" class="form-control" id="deviceSerial">
+                </div>
+                <div class="mb-3">
+                  <label for="deviceWorker" class="form-label">Воркер</label>
+                  <input type="text" class="form-control" id="deviceWorker">
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="deviceModel" class="form-label">Модель устройства</label>
+                  <select id="deviceModel" class="form-select" required>
+                    <option value="">Выберите модель...</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label for="deviceConsumption" class="form-label">Потребление</label>
+                  <input type="number" class="form-control" id="deviceConsumption" step="0.01">
+                </div>
+                <div class="mb-3">
+                  <label for="deviceCards" class="form-label">Количество рабочих карт</label>
+                  <input type="number" class="form-control" id="deviceCards" min="0">
+                </div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="deviceComment" class="form-label">Комментарий</label>
+              <textarea class="form-control" id="deviceComment" rows="3"></textarea>
+            </div>
+            <div class="mb-3">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="devicePolling" checked>
+                <label class="form-check-label" for="devicePolling">Опрос</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="deviceRepair">
+                <label class="form-check-label" for="deviceRepair">Ремонт</label>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+          <button type="button" class="btn btn-primary" id="saveDeviceBtn" data-mode="add" onclick="saveDevice()">Сохранить</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Боковая панель сканирования сети (заменяет модальное окно) -->
+  <div class="offcanvas offcanvas-end w-20" tabindex="-1" id="scanOffcanvas" aria-labelledby="scanOffcanvasLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title">Сканирование сети</h5>
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Закрыть"></button>
+    </div>
+    <div class="offcanvas-body">
+      <form id="scanDevicesForm">
+        <div class="mb-3">
+          <label for="scanStartIp" class="form-label">Начальный IP-адрес</label>
+          <input type="text" class="form-control" id="scanStartIp" pattern="\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}" required>
+        </div>
+        <div class="mb-3">
+          <label for="scanEndIp" class="form-label">Конечный IP-адрес</label>
+          <input type="text" class="form-control" id="scanEndIp" pattern="\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}" required>
+        </div>
+        <div id="scanProgressContainer" class="d-none">
+          <p>Сканирование: <span id="newDevicesCount">0</span> новых устройств найдено</p>
+          <div class="progress mb-3">
+            <div id="scanProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"></div>
+          </div>
+        </div>
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="offcanvas">Отмена</button>
+          <button type="submit" class="btn btn-primary">Начать сканирование</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Модальное окно создания отчета -->
+  <div class="modal fade" id="generateReportModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Создание отчета</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+        </div>
+        <div class="modal-body">
+          <form id="generateReportForm">
+            <div class="mb-3">
+              <label for="reportName" class="form-label">Название отчета</label>
+              <input type="text" class="form-control" id="reportName" required>
+            </div>
+            <div class="mb-3">
+              <label for="reportPeriod" class="form-label">Период</label>
+              <select class="form-select" id="reportPeriod">
+                <option value="day">За день</option>
+                <option value="week">За неделю</option>
+                <option value="month">За месяц</option>
+                <option value="custom">Указать даты</option>
+              </select>
+            </div>
+            <div id="customDateContainer" class="d-none">
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="customStartDate" class="form-label">Начальная дата</label>
+                  <input type="date" class="form-control" id="customStartDate">
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="customEndDate" class="form-label">Конечная дата</label>
+                  <input type="date" class="form-control" id="customEndDate">
+                </div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="reportDevice" class="form-label">Устройство</label>
+              <select class="form-select" id="reportDevice">
+                <option value="all">Все устройства</option>
+                <!-- Список устройств будет загружен динамически -->
+              </select>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+              <button type="submit" class="btn btn-primary">Создать отчет</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно информации об устройстве (детально) -->
+  <div class="modal fade" id="deviceDetailModal" tabindex="-1" aria-labelledby="deviceDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deviceDetailModalLabel">Информация об устройстве</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+        </div>
+        <div class="modal-body">
+          <div id="deviceDetailLoadingIndicator" class="text-center my-4 d-none">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Загрузка...</span>
+            </div>
+            <p>Загрузка данных...</p>
+          </div>
+          <div id="deviceDetailInfoBlock"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно с графиком истории устройства -->
+  <div class="modal fade chart-modal" id="deviceHistoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="historyModalTitle">График простоев</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+        </div>
+        <div class="modal-body">
+          <div id="historyLoadingIndicator" class="text-center my-4 d-none">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Загрузка...</span>
+            </div>
+            <p>Загрузка данных...</p>
+          </div>
+          <div class="chart-container">
+            <canvas id="historyChart"></canvas>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно для графика устройства -->
+  <div class="modal fade" id="deviceGraphModal" tabindex="-1" aria-labelledby="deviceGraphModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deviceGraphModalLabel">График простоев устройства</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+        </div>
+        <div class="modal-body">
+          <div id="deviceGraphLoadingIndicator" class="text-center my-4 d-none">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Загрузка...</span>
+            </div>
+            <p>Загрузка данных...</p>
+          </div>
+          <div class="chart-container" style="height: 400px;">
+            <canvas id="deviceGraphChart"></canvas>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/devices.js"></script>
+  <script src="js/settings.js"></script>
+  <script src="js/reports.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script>
+    // Вставка меню
+    fetch('/partials/header.html').then(r=>r.text()).then(html=>{
+      document.getElementById('mainHeader').innerHTML = html;
+    });
+
+    // Исправление: удаляем backdrop, если модалка закрыта
+    document.addEventListener('DOMContentLoaded', function() {
+      var deviceModal = document.getElementById('deviceModal');
+      if (deviceModal) {
+        deviceModal.addEventListener('hidden.bs.modal', function () {
+          document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        });
+      }
+    });
+
+    // Загрузка количества ошибок
+    async function updateErrorsCount() {
+      try {
+        const res = await fetch('/api/errors?');
+        const errors = await res.json();
+        document.getElementById('errorsCount').textContent = errors.length;
+      } catch (e) {
+        document.getElementById('errorsCount').textContent = '0';
+      }
+    }
+    updateErrorsCount();
+  </script>
+</body>
+</html>

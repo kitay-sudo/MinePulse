@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mine Pulse</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .table thead th { vertical-align: middle; }
+  </style>
+</head>
+<body data-bs-theme="dark">
+  <div id="mainHeader"></div>
+  <div class="container p-3">
+    <h2 class="mb-3">Счета</h2>
+    <div class="row align-items-end mb-3 g-2">
+      <div class="col-md-2">
+        <label class="form-label mb-0">Статус</label>
+        <select id="statusFilter" class="form-select">
+          <option value="all">Все</option>
+          <option value="На оплате">На оплате</option>
+          <option value="Оплачен">Оплачен</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label mb-0">Поиск по клиенту</label>
+        <input type="text" class="form-control" id="clientSearch" placeholder="ФИО клиента, ID...">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label mb-0">Период с</label>
+        <input type="date" class="form-control" id="fromDate">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label mb-0">Период по</label>
+        <input type="date" class="form-control" id="toDate">
+      </div>
+      <div class="col-md-1">
+        <label class="form-label mb-0 d-block">&nbsp;</label>
+        <button class="btn btn-outline-secondary w-100" id="resetInvoicesFiltersBtn" type="button">Сбросить</button>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label mb-0">На странице</label>
+        <select id="invoicesPerPage" class="form-select">
+          <option value="10">10</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+        </select>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-dark table-bordered align-middle" id="invoicesTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Дата</th>
+            <th>Клиент</th>
+            <th>Сумма</th>
+            <th>Статус</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="d-flex justify-content-between align-items-center mt-3 mb-5">
+      <div id="invoicesPaginationInfo" class="text-muted"></div>
+      <ul class="pagination mb-0" id="invoicesPagination"></ul>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/invoices.js"></script>
+  <script>
+    fetch('/partials/header.html').then(r=>r.text()).then(html=>{
+      document.getElementById('mainHeader').innerHTML = html;
+    });
+  </script>
+</body>
+</html> 

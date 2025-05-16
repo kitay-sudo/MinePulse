@@ -94,6 +94,23 @@ MINE_PULSE/
 docker-compose down
 ```
 
+## 🟢 Установка Node.js через nvm (альтернативно)
+
+Если не используете Docker, рекомендуем установить Node.js через nvm:
+
+1. Установите nvm:
+   ```bash
+   curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+   # или для Windows: https://github.com/coreybutler/nvm-windows
+   ```
+2. Перезапустите терминал и установите свежую версию Node.js:
+   ```bash
+   nvm install node
+   nvm use node
+   node -v
+   npm -v
+   ```
+
 ---
 
 ## Документация

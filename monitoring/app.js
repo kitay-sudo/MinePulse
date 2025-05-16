@@ -85,23 +85,35 @@ async function updateDeviceStatus(device, online) {
   }
 }
 
-// Получить IP по MAC через локальную ARP-таблицу
-function getIpByMac(mac) {
+// НОВАЯ ФУНКЦИЯ через arp-scan
+function getIpByMac(mac, iface = null) {
   try {
-    const arpOutput = execSync('arp -a').toString();
-    const macNorm = mac.toLowerCase().replace(/-/g, ':');
-    const regex = new RegExp(`([\d\.]+)\s+([\w-]+)\s+${macNorm.replace(/:/g, '[-:]?')}`, 'i');
-    const lines = arpOutput.split('\n');
+    const macNorm = mac.toLowerCase().replace(/-/g, ':').replace(/\s+/g, '');
+    // Определяем интерфейс, если не передан
+    if (!iface) {
+      iface = getMainInterface();
+    }
+    if (!iface) {
+      logger.warn('Не удалось определить интерфейс для arp-scan');
+      return null;
+    }
+    const cmd = `sudo arp-scan --interface=${iface} --localnet`;
+    const output = execSync(cmd).toString();
+    const lines = output.split('\n');
     for (const line of lines) {
-      if (line.toLowerCase().includes(macNorm)) {
-        const match = line.match(/([\d\.]+)\s+([\w-]+)\s+([\da-f:-]{17})/i);
-        if (match) {
-          return match[1];
+      if (macNorm && line.toLowerCase().includes(macNorm)) {
+        // arp-scan выводит: IP\tMAC\tVendor
+        const parts = line.split(/\s+/);
+        if (parts.length >= 2) {
+          logger.info(`Найден IP по MAC ${mac}: ${parts[0]}`);
+          return parts[0];
         }
       }
     }
+    logger.warn(`IP по MAC ${mac} не найден через arp-scan`);
     return null;
   } catch (e) {
+    logger.error(`Ошибка arp-scan для MAC ${mac}: ${e.message}`);
     return null;
   }
 }

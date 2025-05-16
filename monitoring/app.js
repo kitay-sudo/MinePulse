@@ -11,11 +11,13 @@ import DowntimeModel from '../models/downtime.js';
 import SettingsModel from '../models/settings.js';
 import { performance } from 'perf_hooks';
 import { execSync } from 'child_process';
+import os from 'os';
 
 const MONGO_URI = process.env.MONGO_URI;
 const PING_INTERVAL = parseInt(process.env.PING_INTERVAL || '60', 10); // in seconds
 const ALERT_OFFLINE_MINUTES = 5; // offline threshold for alert
 const STATS_REPORT_INTERVAL_MINUTES = parseInt(process.env.STATS_REPORT_INTERVAL_MINUTES || '60', 10);
+const NETWORK_BASES = process.env.NETWORK_BASES ? process.env.NETWORK_BASES.split(',').map(s => s.trim()) : null;
 
 let firstPollDone = false;
 let lastStatsSent = 0;
@@ -232,8 +234,50 @@ async function pollDevices() {
   }
 }
 
+function getAllNetworkRanges() {
+  if (NETWORK_BASES && NETWORK_BASES.length) {
+    return NETWORK_BASES;
+  }
+  const interfaces = os.networkInterfaces();
+  const bases = [];
+  for (const name of Object.keys(interfaces)) {
+    for (const net of interfaces[name]) {
+      if (net.family === 'IPv4' && !net.internal) {
+        const ip = net.address.split('.');
+        bases.push(`${ip[0]}.${ip[1]}.${ip[2]}`);
+      }
+    }
+  }
+  return [...new Set(bases)];
+}
+
+async function scanNetworkRange() {
+  const bases = getAllNetworkRanges();
+  if (!bases.length) {
+    logger.warn('Не удалось определить диапазоны локальных сетей для сканирования');
+    return;
+  }
+  for (const base of bases) {
+    logger.info(`Сканирование подсети: ${base}.1-254`);
+    const limit = pLimit(50);
+    await Promise.all(
+      Array.from({ length: 254 }, (_, i) => i + 1).map(i =>
+        limit(async () => {
+          const ip = `${base}.${i}`;
+          try {
+            await ping.promise.probe(ip, { timeout: 1 });
+          } catch {}
+        })
+      )
+    );
+    logger.info(`Сканирование подсети ${base}.1-254 завершено`);
+  }
+}
+
+// При запуске мониторинга — сначала сканируем диапазон
 async function startPolling() {
   try {
+    await scanNetworkRange();
     await pollDevices();
     setInterval(pollDevices, PING_INTERVAL * 1000);
   } catch (error) {
@@ -255,6 +299,12 @@ async function main() {
   } catch (error) {
     throw new AppError('Ошибка запуска приложения', 500, { error: error.message });
   }
+}
+
+// Экспортируем функцию для вызова при добавлении нового устройства (например, из API)
+export async function scanNetworkOnNewDevice() {
+  logger.info('Добавлено новое устройство — запускаю сканирование диапазона сети');
+  await scanNetworkRange();
 }
 
 main();

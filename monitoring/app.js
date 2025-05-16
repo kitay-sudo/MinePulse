@@ -251,13 +251,50 @@ function getAllNetworkRanges() {
   return [...new Set(bases)];
 }
 
+function getMainInterface() {
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const net of interfaces[name]) {
+      if (net.family === 'IPv4' && !net.internal) {
+        return name;
+      }
+    }
+  }
+  return null;
+}
+
+function hasIpOnInterface(iface, base) {
+  const interfaces = os.networkInterfaces();
+  if (!interfaces[iface]) return false;
+  return interfaces[iface].some(net => net.family === 'IPv4' && net.address.startsWith(base + '.'));
+}
+
+function addIpToInterface(iface, base) {
+  const ip = `${base}.250/24`;
+  try {
+    execSync(`sudo ip addr add ${ip} dev ${iface}`);
+    logger.info(`Добавлен IP ${ip} на интерфейс ${iface}`);
+  } catch (e) {
+    logger.warn(`Не удалось добавить IP ${ip} на интерфейс ${iface}: ${e.message}`);
+  }
+}
+
 async function scanNetworkRange() {
   const bases = getAllNetworkRanges();
   if (!bases.length) {
     logger.warn('Не удалось определить диапазоны локальных сетей для сканирования');
     return;
   }
+  const iface = getMainInterface();
+  if (!iface) {
+    logger.warn('Не удалось определить основной сетевой интерфейс');
+    return;
+  }
   for (const base of bases) {
+    if (!hasIpOnInterface(iface, base)) {
+      logger.info(`На интерфейсе ${iface} нет IP из подсети ${base}.x, добавляю временный...`);
+      addIpToInterface(iface, base);
+    }
     logger.info(`Сканирование подсети: ${base}.1-254`);
     const limit = pLimit(50);
     await Promise.all(

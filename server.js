@@ -964,13 +964,13 @@ app.get('/api/users/:id/invoice', async (req, res) => {
         consumption,
         minutesWorked,
         minutesDowntime,
-        amount
+        amount: Number(amount.toFixed(2))
       });
       totalDowntime += minutesDowntime;
       totalAmount += amount;
       totalConsumption += consumption;
     }
-    res.json({ totalDowntime, totalAmount, totalConsumption, tariff, details });
+    res.json({ totalDowntime, totalAmount: Number(totalAmount.toFixed(2)), totalConsumption, tariff, details });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

@@ -274,7 +274,7 @@ document.getElementById('invoiceForm').onsubmit = async function(e) {
   const invoice = {
     clientId: userId,
     clientFio: fio,
-    amount: data.totalAmount,
+    amount: Number(data.totalAmount.toFixed(2)),
     status: 'На оплате',
     periodFrom: from,
     periodTo: to,

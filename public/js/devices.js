@@ -12,6 +12,7 @@ let devices = [];
 let selectedDevice = null;
 let newDeviceCount = 0;
 let deviceModelsCache = [];
+let isLoadingDevices = false;
 
 // Инициализация модульных элементов при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
@@ -135,11 +136,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Загрузка устройств с сервера
 async function loadDevices() {
+  isLoadingDevices = true;
+  renderDevices();
   const res = await fetch('/api/devices/full');
   const data = await res.json();
   window.devices = data;
   allDevices = data;
   devices = data;
+  isLoadingDevices = false;
   renderDevices();
 }
 
@@ -807,7 +811,13 @@ function calculateTotalDowntime(device) {
 function renderDevices() {
   const tbody = document.querySelector('#devicesTable tbody');
   const noDevicesMessage = document.getElementById('noDevicesMessage');
-  
+  if (noDevicesMessage) noDevicesMessage.classList.add('d-none');
+
+  if (isLoadingDevices) {
+    tbody.innerHTML = '<tr><td colspan="10" class="text-center"><span class="spinner-border spinner-border-sm me-2"></span>Загрузка...</td></tr>';
+    return;
+  }
+
   if (!filteredDevices || filteredDevices.length === 0) {
     tbody.innerHTML = '';
     if (noDevicesMessage) {

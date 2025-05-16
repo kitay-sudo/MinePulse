@@ -152,6 +152,8 @@ async function pingDevice(device, macToIpEnabled = false) {
       worker: device.worker,
       timestamp: new Date()
     });
+    // Логируем только текст ошибки, без stack и error: undefined
+    logger.error(`Ошибка пинга устройства: ${error.message}`);
     throw new AppError('Ошибка пинга устройства', 500, { error: error.message });
   }
 }

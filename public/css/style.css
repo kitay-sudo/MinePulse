@@ -1,0 +1,8 @@
+/* Удалён skeleton-loading и .skeleton */ 
+/* Удаляю fade-in для body */
+body {
+  /* ... существующий код ... */
+}
+body.page-loaded {
+  /* ... существующий код ... */
+} 

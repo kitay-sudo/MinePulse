@@ -28,7 +28,7 @@ function renderInvoices() {
       <td>${start + i + 1}</td>
       <td>${new Date(inv.createdAt).toLocaleString('ru-RU')}</td>
       <td>${inv.clientFio || ''}</td>
-      <td>${inv.amount != null ? inv.amount : '-'}</td>
+      <td>${inv.amount != null ? inv.amount.toFixed(2) : '-'}</td>
       <td>${inv.status}</td>
       <td class="text-center">
         <button class="btn btn-sm btn-outline-primary me-1" title="Посмотреть" onclick="viewInvoice('${inv._id}')"><i class="bi bi-eye"></i></button>

@@ -42,6 +42,10 @@ document.addEventListener('DOMContentLoaded', function() {
     document.body.classList.remove('modal-open');
     document.body.style.overflow = '';
   }, 200);
+
+  setTimeout(function() {
+    document.body.classList.add('page-loaded');
+  }, 50);
 });
 
 // Инициализация глобальных обработчиков событий

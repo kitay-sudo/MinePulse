@@ -16,7 +16,6 @@ import DeviceModelModel from './models/deviceModel.js';
 import User from './models/user.js';
 import Invoice from './models/invoice.js';
 import { logger } from './utils/logger.js';
-import { scanNetworkOnNewDevice } from './monitoring/app.js';
 
 process.removeAllListeners('warning');
 process.on('warning', e => {
@@ -274,8 +273,6 @@ app.post('/api/devices', express.json(), async (req, res) => {
       inRepair: req.body.inRepair
     });
     await device.save();
-    // Запуск сканирования диапазона после добавления устройства
-    await scanNetworkOnNewDevice();
     res.status(201).json(device);
   } catch (error) {
     logger.error('Ошибка добавления устройства:', error);

@@ -47,24 +47,18 @@ async function loadDevicesFromDB() {
 
 async function updateDeviceStatus(device, online) {
   const now = new Date();
-  
   try {
     // Определяем тип события
     const eventType = device.inRepair ? 'repair' : 'status';
-    
-    // Добавляем событие в историю
-    device.events.push({ 
-      timestamp: now, 
-      status: online ? 0 : 1,
-      type: eventType,
-      worker: device.worker
+
+    // --- Запись только в DowntimeModel ---
+    await DowntimeModel.create({
+      worker: device.worker,
+      ip: device.ip,
+      timestamp: now,
+      status: online ? 0 : 1
     });
-    
-    // Обрезаем историю до последних 1440 событий (сутки, если минута интервал)
-    if (device.events.length > 1440) {
-      device.events = device.events.slice(device.events.length - 1440);
-    }
-    
+
     // Если устройство в ремонте, всегда устанавливаем статус offline
     if (device.inRepair) {
       device.status = 'offline';

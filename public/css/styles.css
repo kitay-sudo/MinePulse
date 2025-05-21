@@ -238,6 +238,8 @@ textarea:focus, textarea.focus,
 
 .table-responsive { 
   margin-top: 20px; 
+  padding-bottom: 1px;
+  padding-right: 2px;
 }
 
 /* Фильтры и контейнеры */

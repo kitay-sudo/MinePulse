@@ -1,3 +1,15 @@
+// Скрывать блок, если не на dashboard
+const el = document.getElementById('monitoringLastUpdate');
+if (el) {
+  if (document.body.dataset.dashboard === 'true') {
+    el.classList.remove('d-none');
+    el.style.display = '';
+  } else {
+    el.classList.add('d-none');
+    el.style.display = 'none';
+  }
+}
+
 async function loadMonitoringLastUpdate() {
   const el = document.getElementById('monitoringLastUpdate');
   if (!el) return;

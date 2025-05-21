@@ -21,8 +21,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const btn = document.getElementById('toggleMonitoringBtn');
     if (btn) {
       btn.onclick = function() {
-        console.log('Клик по кнопке мониторинга');
-        toggleMonitoring();
+        const enabled = btn.dataset.enabled === '1';
+        const modal = new bootstrap.Modal(document.getElementById('confirmMonitoringModal'));
+        const text = document.getElementById('confirmMonitoringText');
+        text.textContent = enabled
+          ? 'Вы уверены, что хотите выключить мониторинг?'
+          : 'Вы уверены, что хотите включить мониторинг?';
+        // Сохраняем действие в data-атрибуте
+        document.getElementById('confirmMonitoringBtn').dataset.action = enabled ? 'disable' : 'enable';
+        modal.show();
       };
     } else {
       console.warn('Кнопка мониторинга не найдена!');
@@ -251,4 +258,22 @@ window.toggleMonitoring = async function() {
     alert('Ошибка смены статуса мониторинга');
   }
   btn.disabled = false;
+}
+
+// Добавляем обработчик для кнопки подтверждения
+const confirmBtn = document.getElementById('confirmMonitoringBtn');
+if (confirmBtn) {
+  confirmBtn.onclick = async function() {
+    const btn = document.getElementById('toggleMonitoringBtn');
+    if (!btn) return;
+    const enabled = btn.dataset.enabled === '1';
+    // Закрываем модалку
+    const modalEl = document.getElementById('confirmMonitoringModal');
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    modal.hide();
+    // Ждем чуть-чуть, чтобы модалка скрылась
+    setTimeout(() => {
+      window.toggleMonitoring();
+    }, 200);
+  };
 } 

@@ -13,6 +13,7 @@ let selectedDevice = null;
 let newDeviceCount = 0;
 let deviceModelsCache = [];
 let isLoadingDevices = false;
+let isEditMode = false;
 
 // Инициализация модульных элементов при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
@@ -73,7 +74,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const addDeviceBtn = document.getElementById('addDeviceBtn');
   if (addDeviceBtn) {
     addDeviceBtn.addEventListener('click', function(e) {
-      // Не блокируем стандартное открытие модалки
+      isEditMode = false;
       prepareAddDeviceForm();
     });
   }
@@ -91,8 +92,9 @@ document.addEventListener('DOMContentLoaded', function() {
   const deviceModalEl = document.getElementById('deviceModal');
   if (deviceModalEl) {
     deviceModalEl.addEventListener('show.bs.modal', function(e) {
-      // Если модалка открывается через кнопку редактирования, ничего не делаем
-      // Подготовка формы для добавления выполняется через prepareAddDeviceForm
+      if (!isEditMode) {
+        initDeviceModelSelect('');
+      }
     });
   }
 
@@ -147,42 +149,43 @@ async function loadDevices() {
   renderDevices();
 }
 
-  // Универсальная инициализация select#deviceModel на всех страницах
-  function initDeviceModelSelect(selected = '') {
-    const select = document.getElementById('deviceModel');
-    if (!select) return;
-    select.innerHTML = '<option value="">Выберите модель...</option>';
-    fetch('/api/device-models').then(r=>r.json()).then(models => {
-      deviceModelsCache = models;
-      models.forEach(m => {
-        const opt = document.createElement('option');
-        opt.value = m.name;
-        opt.textContent = m.name;
-        if (selected && selected === m.name) opt.selected = true;
-        select.appendChild(opt);
-      });
-      select.onchange = function() {
-        const model = deviceModelsCache.find(m => m.name === this.value);
-        if (model) document.getElementById('deviceConsumption').value = model.consumption;
-      };
-    });
-  }
-
-  // Инициализация при открытии модалки (универсально)
-  const deviceModal = document.getElementById('deviceModal');
-  if (deviceModal) {
-    deviceModal.addEventListener('show.bs.modal', function() {
-      // Если редактируем — подставим выбранную модель (берём текущее значение input/select)
-      let modelValue = '';
-      const modelInput = document.getElementById('deviceModel');
-      if (modelInput) {
-        modelValue = modelInput.value || '';
+function initDeviceModelSelect(selected = '') {
+  const select = document.getElementById('deviceModel');
+  if (!select) return;
+  select.innerHTML = '';
+  const defaultOption = document.createElement('option');
+  defaultOption.value = '';
+  defaultOption.textContent = 'Выберите модель...';
+  select.appendChild(defaultOption);
+  fetch('/api/device-models').then(r=>r.json()).then(models => {
+    // Для отладки
+    console.log('Заполняю select моделей', models);
+    // Убираем дубли по имени
+    const uniqueModels = [];
+    const seenNames = new Set();
+    models.forEach(m => {
+      if (!seenNames.has(m.name)) {
+        uniqueModels.push(m);
+        seenNames.add(m.name);
       }
-      initDeviceModelSelect(modelValue);
     });
-  }
-});
-
+    deviceModelsCache = uniqueModels;
+    uniqueModels.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m._id;
+      opt.textContent = m.name;
+      if (selected && (selected === m._id || selected === m.name)) opt.selected = true;
+      select.appendChild(opt);
+    });
+    // Для отладки
+    console.log('Селект после заполнения:', select.innerHTML, 'Количество опций:', select.options.length);
+    select.onchange = function() {
+      const model = deviceModelsCache.find(m => m._id === this.value);
+      if (model) document.getElementById('deviceConsumption').value = model.consumption;
+    };
+  });
+}
+window.initDeviceModelSelect = initDeviceModelSelect;
 
 // Обновление статистики устройств
 function updateDevicesStatistics() {
@@ -233,49 +236,15 @@ function renderDevicesList() {
   }
 }
 
-// Загрузка моделей устройств для select
-async function loadDeviceModelsSelect(selected = '') {
-  const select = document.getElementById('deviceModel');
-  if (!select) return;
-  select.innerHTML = '<option value="">Выберите модель...</option>';
-  try {
-    const res = await fetch('/api/device-models');
-    const models = await res.json();
-    deviceModelsCache = models;
-    models.forEach(m => {
-      const opt = document.createElement('option');
-      opt.value = m.name;
-      opt.textContent = m.name;
-      if (selected && selected === m.name) opt.selected = true;
-      select.appendChild(opt);
-    });
-    // Навешиваем обработчик автозаполнения каждый раз после обновления options
-    select.onchange = function() {
-      const selectedName = this.value;
-      const model = deviceModelsCache.find(m => m.name === selectedName);
-      if (model) {
-        document.getElementById('deviceConsumption').value = model.consumption;
-      }
-    };
-  } catch {}
-}
-
-// Модифицирую editDevice для подгрузки моделей
-const origEditDevice = editDevice;
-editDevice = function(deviceId) {
-  const device = allDevices.find(d => d._id === deviceId);
-  loadDeviceModelsSelect(device?.model || '');
-  if (typeof origEditDevice === 'function') origEditDevice(deviceId);
-}
-
 // Открытие панели редактирования устройства (заменяет функцию openAddDeviceModal)
 function editDevice(deviceId) {
+  isEditMode = true;
   try {
     const device = allDevices.find(d => d._id === deviceId);
     if (!device) return;
-    
     selectedDevice = device;
-    
+    // Заполняем select моделей
+    initDeviceModelSelect((device && device.model && device.model._id) ? device.model._id : device?.model || '');
     const modalTitle = document.getElementById('deviceModalTitle');
     const deviceIp = document.getElementById('deviceIp');
     const deviceMac = document.getElementById('deviceMac');
@@ -286,25 +255,21 @@ function editDevice(deviceId) {
     const deviceCards = document.getElementById('deviceCards');
     const deviceComment = document.getElementById('deviceComment');
     const saveDeviceBtn = document.getElementById('saveDeviceBtn');
-    
     if (modalTitle) modalTitle.textContent = 'Редактировать устройство';
     if (deviceIp) deviceIp.value = device.ip;
     if (deviceMac) deviceMac.value = device.mac || '';
     if (deviceSerial) deviceSerial.value = device.serialNumber || '';
     if (deviceWorker) deviceWorker.value = device.worker || '';
-    if (deviceModel) deviceModel.value = device.model || '';
+    if (deviceModel) deviceModel.value = (device.model && device.model._id) ? device.model._id : device.model || '';
     if (deviceConsumption) deviceConsumption.value = device.consumption || '';
     if (deviceCards) deviceCards.value = device.cards || '';
     if (deviceComment) deviceComment.value = device.comment || '';
     if (saveDeviceBtn) saveDeviceBtn.dataset.mode = 'edit';
-    
     // Устанавливаем значения чекбоксов
     const devicePolling = document.getElementById('devicePolling');
     const deviceRepair = document.getElementById('deviceRepair');
-    
     if (devicePolling) devicePolling.checked = device.enablePolling !== false;
     if (deviceRepair) deviceRepair.checked = device.inRepair === true;
-    
     // Открываем модальное окно по центру
     const modalElement = document.getElementById('deviceModal');
     if (modalElement) {
@@ -315,6 +280,7 @@ function editDevice(deviceId) {
     console.error('Ошибка открытия модального окна редактирования:', error);
   }
 }
+window.editDevice = editDevice;
 
 // Сохранение устройства (добавление или обновление)
 async function saveDevice() {
@@ -331,7 +297,7 @@ async function saveDevice() {
       mac: document.getElementById('deviceMac')?.value.trim() || '',
       serialNumber: document.getElementById('deviceSerial')?.value.trim() || '',
       worker: document.getElementById('deviceWorker')?.value.trim() || '',
-      model: document.getElementById('deviceModel')?.value.trim() || '',
+      model: document.getElementById('deviceModel')?.value || '',
       consumption: parseFloat(document.getElementById('deviceConsumption')?.value) || 0,
       cards: parseInt(document.getElementById('deviceCards')?.value, 10) || 0,
       comment: document.getElementById('deviceComment')?.value.trim() || '',
@@ -398,6 +364,7 @@ async function saveDevice() {
     showError('Произошла ошибка при обработке формы.');
   }
 }
+window.saveDevice = saveDevice;
 
 // Удаление устройства
 async function deleteDevice(deviceId) {
@@ -822,7 +789,6 @@ function renderDevices() {
     tbody.innerHTML = '';
     if (noDevicesMessage) {
       noDevicesMessage.classList.remove('d-none');
-      // Изменяем текст сообщения в зависимости от ситуации
       if (allDevices.length > 0) {
         noDevicesMessage.innerHTML = '<i class="bi bi-info-circle"></i> Нет устройств, соответствующих выбранным фильтрам.';
       } else {
@@ -831,17 +797,12 @@ function renderDevices() {
     }
     return;
   }
-  
   if (noDevicesMessage) noDevicesMessage.classList.add('d-none');
-  
-  // Получаем только устройства для текущей страницы
   const start = (currentPage - 1) * itemsPerPage;
   const paginatedDevices = filteredDevices.slice(start, start + itemsPerPage);
-  
   tbody.innerHTML = paginatedDevices.map(device => {
     // Определяем статус устройства
     let statusClass, statusText;
-    
     if (device.inRepair) {
       statusClass = 'text-warning';
       statusText = 'Ремонт';
@@ -852,46 +813,46 @@ function renderDevices() {
       statusClass = 'text-success';
       statusText = 'В сети';
     }
-    
     const lastSeen = device.lastChecked ? new Date(device.lastChecked).toLocaleString() : 'Никогда';
-    
-    // Рассчитываем общее время простоя
     const downtimeMinutes = calculateTotalDowntime(device);
     const formattedDowntime = formatDowntime(downtimeMinutes);
-    
+    // Подсветка потребления, если отличается от дефолтного
+    let consumptionClass = '';
+    let modelDefault = null;
+    if (device.model && deviceModelsCache && deviceModelsCache.length) {
+      if (typeof device.model === 'object' && device.model._id) {
+        modelDefault = deviceModelsCache.find(m => m._id === device.model._id);
+      } else {
+        modelDefault = deviceModelsCache.find(m => m._id === device.model || m.name === device.model);
+      }
+    }
+    if (modelDefault && device.consumption !== modelDefault.consumption) {
+      consumptionClass = 'bg-warning text-dark';
+    }
     return `<tr>
       <td>${device.ip || '-'}</td>
       <td class="${statusClass}">${statusText}${device.alert ? ' (Ошибка)' : ''}</td>
       <td>${device.mac || '-'}</td>
-      <td style="display:none;">${device.serialNumber || '-'}</td>
       <td>${device.worker || '-'}</td>
-      <td>${device.consumption ? `${device.consumption} Вт` : '-'}</td>
+      <td class="${consumptionClass}">${device.consumption ? `${device.consumption} Вт` : '-'}</td>
       <td>${lastSeen}</td>
       <td class="text-center align-middle" style="height: 56px;">
-        <div class="form-check form-switch d-flex justify-content-center align-items-center" style="height:100%;">
+        <div class="form-check form-switch d-flex justify-content-center align-items-center" style="height:100%; margin-right:24px;">
           <input class="form-check-input" type="checkbox" style="margin-top:0;width:2.5em;height:1.5em;margin-left:0;margin-right:0;display:block;" ${device.enablePolling ? 'checked' : ''} onchange="toggleDeviceSetting('${device._id}', 'enablePolling', this.checked)">
         </div>
       </td>
       <td class="text-center align-middle" style="height: 56px;">
-        <div class="form-check form-switch d-flex justify-content-center align-items-center" style="height:100%;">
+        <div class="form-check form-switch d-flex justify-content-center align-items-center" style="height:100%; margin-right:24px;">
           <input class="form-check-input" type="checkbox" style="margin-top:0;width:2.5em;height:1.5em;margin-left:0;margin-right:0;display:block;" ${device.inRepair ? 'checked' : ''} onchange="toggleDeviceSetting('${device._id}', 'inRepair', this.checked)">
         </div>
       </td>
-      <td style="padding: 0; text-align: center; vertical-align: middle;">
-        <div class="btn-group btn-group-sm" style="gap: 5px; justify-content: center;">
-          <button class="btn btn-sm btn-outline-primary" onclick="showDeviceDetail('${device._id}')" title="Детали" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius:0;">
-            <i class="bi bi-info-circle"></i>
-          </button>
-          <button class="btn btn-sm btn-outline-success" onclick="pingDevice('${device._id}')" title="Пинг" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius:0;">
-            <i class="bi bi-wifi"></i>
-          </button>
-          <button class="btn btn-sm btn-outline-warning" onclick="editDevice('${device._id}')" title="Редактировать" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius:0;">
-            <i class="bi bi-pencil"></i>
-          </button>
-          <button class="btn btn-sm btn-outline-danger" onclick="deleteDevice('${device._id}')" title="Удалить" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius:0;">
-            <i class="bi bi-trash"></i>
-          </button>
-        </div>
+      <td class="text-center align-middle">
+        <button class="btn btn-sm btn-outline-primary me-1" onclick="showDeviceDetail('${device._id}')" title="Детали"><i class="bi bi-info-circle"></i></button>
+        <button class="btn btn-sm btn-outline-success me-1" onclick="pingDevice('${device._id}')" title="Пинг"><i class="bi bi-wifi"></i></button>
+      </td>
+       <td class="text-center align-middle">
+        <button class="btn btn-sm btn-outline-warning me-1" onclick="editDevice('${device._id}')" title="Редактировать"><i class="bi bi-pencil"></i></button>
+        <button class="btn btn-sm btn-outline-danger" onclick="deleteDevice('${device._id}')" title="Удалить"><i class="bi bi-trash"></i></button>
       </td>
     </tr>`;
   }).join('');
@@ -960,3 +921,57 @@ async function toggleDeviceSetting(deviceId, setting, value) {
     await loadDevices();
   }
 }
+
+// Добавляю функцию для сброса формы и состояния при создании нового устройства
+function prepareAddDeviceForm() {
+  const form = document.getElementById('deviceForm');
+  if (form) form.reset();
+  selectedDevice = null;
+  const saveDeviceBtn = document.getElementById('saveDeviceBtn');
+  if (saveDeviceBtn) {
+    saveDeviceBtn.dataset.mode = 'add';
+    delete saveDeviceBtn.dataset.id;
+  }
+  // Сбросить select модели
+  const deviceModel = document.getElementById('deviceModel');
+  if (deviceModel) deviceModel.value = '';
+  // Сбросить потребление
+  const deviceConsumption = document.getElementById('deviceConsumption');
+  if (deviceConsumption) deviceConsumption.value = '';
+  // Сбросить все остальные поля
+  const deviceIp = document.getElementById('deviceIp');
+  if (deviceIp) deviceIp.value = '';
+  const deviceMac = document.getElementById('deviceMac');
+  if (deviceMac) deviceMac.value = '';
+  const deviceSerial = document.getElementById('deviceSerial');
+  if (deviceSerial) deviceSerial.value = '';
+  const deviceWorker = document.getElementById('deviceWorker');
+  if (deviceWorker) deviceWorker.value = '';
+  const deviceCards = document.getElementById('deviceCards');
+  if (deviceCards) deviceCards.value = '';
+  const deviceComment = document.getElementById('deviceComment');
+  if (deviceComment) deviceComment.value = '';
+  const devicePolling = document.getElementById('devicePolling');
+  if (devicePolling) devicePolling.checked = true;
+  const deviceRepair = document.getElementById('deviceRepair');
+  if (deviceRepair) deviceRepair.checked = false;
+  // Меняем заголовок модалки
+  const modalTitle = document.getElementById('deviceModalTitle');
+  if (modalTitle) modalTitle.textContent = 'Добавить устройство';
+}
+window.prepareAddDeviceForm = prepareAddDeviceForm;
+
+// Обработчик для кнопки быстрого добавления устройства
+const quickAddDeviceBtn = document.getElementById('quickAddDeviceBtn');
+if (quickAddDeviceBtn) {
+  quickAddDeviceBtn.addEventListener('click', function(e) {
+    isEditMode = false;
+    prepareAddDeviceForm();
+    const modalElement = document.getElementById('deviceModal');
+    if (modalElement) {
+      const modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement);
+      modalInstance.show();
+    }
+  });
+}
+});

@@ -745,14 +745,33 @@ app.get('/api/device-models', async (req, res) => {
 // Добавить новую модель
 app.post('/api/device-models', express.json(), async (req, res) => {
   try {    
-    const { name, consumption } = req.body;
+    const { name, consumption, ths } = req.body;
     if (!name || !consumption) return res.status(400).json({ error: 'Заполните все поля' });
     const exists = await DeviceModelModel.findOne({ name });
     if (exists) return res.status(400).json({ error: 'Такая модель уже есть' });
-    const model = await DeviceModelModel.create({ name, consumption });
+    const model = await DeviceModelModel.create({ name, consumption, ths });
     res.status(201).json(model);
   } catch (error) {
     res.status(500).json({ error: 'Ошибка сервера при добавлении модели' });
+  }
+});
+
+// Обновить модель устройства
+app.put('/api/device-models/:id', express.json(), async (req, res) => {
+  try {
+    const { name, consumption, ths } = req.body;
+    if (!name || !consumption) return res.status(400).json({ error: 'Заполните все поля' });
+    const exists = await DeviceModelModel.findOne({ name, _id: { $ne: req.params.id } });
+    if (exists) return res.status(400).json({ error: 'Такая модель уже есть' });
+    const updated = await DeviceModelModel.findByIdAndUpdate(
+      req.params.id,
+      { name, consumption, ths },
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ error: 'Модель не найдена' });
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ error: 'Ошибка сервера при обновлении модели' });
   }
 });
 

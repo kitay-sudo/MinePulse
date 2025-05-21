@@ -7,7 +7,7 @@ const deviceSchema = new mongoose.Schema({
   serialNumber: { type: String, default: '' },
   worker: { type: String, default: '' },
   consumption: { type: Number, default: 0 },
-  model: { type: String, default: '' },
+  model: { type: mongoose.Schema.Types.ObjectId, ref: 'DeviceModel', default: null },
   cards: { type: Number, default: 0 }, // Количество рабочих карт
   comment: { type: String, default: '' },
   inRepair: { type: Boolean, default: false },

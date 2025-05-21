@@ -24,7 +24,7 @@
     }
   </style>
 </head>
-<body data-bs-theme="dark">
+<body data-dashboard="true" data-bs-theme="dark">
   <div id="mainHeader"></div>
   <div class="container-lg py-4 px-2 px-md-4">
     <!-- Статистика -->
@@ -79,7 +79,7 @@
       </div>
     </div>
     <!-- Фильтры -->
-    <form class="row g-2 mb-4 align-items-end flex-nowrap">
+    <form class="row g-2 mb-4 align-items-end flex-wrap">
       <div class="col-auto">
         <label for="statusFilter" class="form-label mb-0">Статус</label>
         <select class="form-select form-select-sm" id="statusFilter">
@@ -111,7 +111,7 @@
       </div>
       <div class="col-auto d-flex align-items-end gap-2">
         <button class="btn btn-outline-secondary btn-sm" id="resetFiltersBtn" type="button">Сбросить</button>
-        <button class="btn btn-primary btn-sm" id="quickAddDeviceBtn" data-bs-toggle="modal" data-bs-target="#deviceModal" type="button">Добавить</button>
+        <button class="btn btn-primary btn-sm" id="quickAddDeviceBtn" type="button">Добавить</button>
         <button class="btn btn-outline-success btn-sm p-0 d-flex align-items-center justify-content-center" id="toggleMonitoringBtn" type="button" style="width:32px;height:32px;" title="Включить/выключить мониторинг">
           <i id="monitoringStatusIcon" class="bi bi-power"></i>
         </button>
@@ -144,25 +144,26 @@
       <h5 class="alert-heading">Ошибка</h5>
       <i class="bi bi-exclamation-triangle"></i> Обнаружены ошибки в системе.
     </div>
+
+
     <!-- Таблица устройств -->
-    <div class="bg-dark text-white p-0 mb-5 overflow-auto">
-      <table class="table table-hover table-dark table-bordered mb-0" id="devicesTable" style="font-size: 15px;">
+    <div class="table-responsive">
+      <table class="table table-dark table-bordered align-middle" id="devicesTable">
         <thead>
           <tr>
             <th>IP-адрес</th>
             <th>Статус</th>
             <th>MAC</th>
-            <th style="display:none;">Серийный</th>
             <th>Воркер</th>
             <th>Потребление</th>
             <th>Последнее обновление</th>
             <th>Опрос</th>
             <th>Ремонт</th>
+            <th>Информация</th>
             <th>Действия</th>
           </tr>
         </thead>
-        <tbody>
-        </tbody>
+        <tbody></tbody>
       </table>
     </div>
     <!-- Пагинация -->
@@ -170,7 +171,6 @@
       <div id="paginationInfo" class="text-muted">Показано 0-0 из 0 устройств</div>
       <ul class="pagination" id="pagination"></ul>
     </div>
-    <!-- Остальной контент (разделы, модалки и т.д.) оставляю без изменений -->
   </div>
 
   <!-- Модальное окно добавления/редактирования устройства -->
@@ -410,6 +410,25 @@
     </div>
   </div>
 
+  <!-- Модальное окно подтверждения изменения состояния мониторинга -->
+  <div class="modal fade" id="confirmMonitoringModal" tabindex="-1" aria-labelledby="confirmMonitoringLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="confirmMonitoringLabel">Подтверждение</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+        </div>
+        <div class="modal-body" id="confirmMonitoringText">
+          Вы уверены, что хотите изменить состояние мониторинга?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+          <button type="button" class="btn btn-primary" id="confirmMonitoringBtn">Да, подтвердить</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Bootstrap Bundle JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="js/common.js"></script>
@@ -418,6 +437,7 @@
   <script src="js/settings.js"></script>
   <script src="js/reports.js"></script>
   <script src="js/dashboard.js"></script>
+  <script src="js/monitoringLastUpdate.js"></script>
   <script>
     // Вставка меню
     fetch('/partials/header.html').then(r=>r.text()).then(html=>{

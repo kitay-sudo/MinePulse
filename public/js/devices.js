@@ -15,6 +15,11 @@ let deviceModelsCache = [];
 let isLoadingDevices = false;
 let isEditMode = false;
 
+async function loadDeviceModelsCache() {
+  const res = await fetch('/api/device-models');
+  deviceModelsCache = await res.json();
+}
+
 // Инициализация модульных элементов при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
   // Инициализируем модальное окно для графика
@@ -140,6 +145,10 @@ document.addEventListener('DOMContentLoaded', function() {
 async function loadDevices() {
   isLoadingDevices = true;
   renderDevices();
+  // Сначала загрузить модели, если кэш пуст
+  if (!deviceModelsCache || !deviceModelsCache.length) {
+    await loadDeviceModelsCache();
+  }
   const res = await fetch('/api/devices/full');
   const data = await res.json();
   window.devices = data;
@@ -530,9 +539,6 @@ async function pingDevice(deviceId) {
         pingButton.classList.add('btn-outline-success');
       }, 1000);
     }
-    
-    // Обновляем список устройств
-    await loadDevices();
   } catch (error) {
     console.error('Ошибка при пинге устройства:', error);
     pingButton.classList.remove('btn-outline-success', 'btn-outline-danger');
@@ -828,7 +834,14 @@ function renderDevices() {
         modelDefault = deviceModelsCache.find(m => m._id === device.model || m.name === device.model);
       }
     }
-    if (modelDefault && device.consumption !== modelDefault.consumption) {
+    const deviceConsumption = Number(device.consumption);
+    const modelConsumption = modelDefault ? Number(modelDefault.consumption) : NaN;
+    if (
+      modelDefault &&
+      !isNaN(deviceConsumption) &&
+      !isNaN(modelConsumption) &&
+      deviceConsumption !== modelConsumption
+    ) {
       consumptionClass = 'bg-warning text-dark';
     }
     return `<tr>

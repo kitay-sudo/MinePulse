@@ -902,6 +902,25 @@ app.post('/api/settings/mac-to-ip', express.json(), async (req, res) => {
   res.json({ macToIpEnabled: updated.macToIpEnabled });
 });
 
+// Удалить воркера из всех устройств и простоев
+app.delete('/api/workers/:worker', async (req, res) => {
+  const worker = req.params.worker;
+  try {
+    // Удалить воркера из всех устройств
+    await DeviceModel.updateMany({ worker }, { $set: { worker: '' } });
+    // Удалить все события простоев с этим воркером
+    await DowntimeModel.deleteMany({ worker });
+    // (опционально) удалить воркера из всех пользователей
+    await User.updateMany(
+      { workers: worker },
+      { $pull: { workers: worker } }
+    );
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: 'Ошибка при удалении воркера' });
+  }
+});
+
 // Запуск сервера
 // Проверка лицензии при запуске
 function isLicenseExpired() {

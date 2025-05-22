@@ -58,7 +58,10 @@ function renderWorkers() {
       <td>${worker.ip || '-'}</td>
       <td>${formatDowntime(worker.downtimeCount || 0)}</td>
       <td>${getClientFioForWorker(worker.worker)}</td>
-      <td><button class="btn btn-sm btn-outline-info" onclick="showWorkerChart('${worker.worker}')"><i class="bi bi-graph-up"></i> Показать график</button></td>
+      <td class="text-center">
+        <button class="btn btn-sm btn-outline-primary me-1" title="График простоев" onclick="showWorkerChart('${worker.worker}')"><i class="bi bi-bar-chart"></i></button>
+        <button class="btn btn-sm btn-outline-danger" title="Удалить воркера" onclick="deleteWorker('${worker.worker}')"><i class="bi bi-trash"></i></button>
+      </td>
     </tr>
   `).join('');
   // Счётчик
@@ -105,15 +108,65 @@ window.goToWorkersPage = function(page) {
   renderWorkersPagination();
 }
 
-// Показать график простоев воркера
+// Агрегация событий по интервалу (минуты)
+function aggregateEvents(events, intervalMinutes = 10) {
+  if (!events.length) return [];
+  const result = [];
+  let groupStart = new Date(events[0].timestamp);
+  let groupStatus = 0;
+  for (const e of events) {
+    const t = new Date(e.timestamp);
+    if ((t - groupStart) / 60000 > intervalMinutes) {
+      result.push({ timestamp: groupStart, status: groupStatus });
+      groupStart = t;
+      groupStatus = 0;
+    }
+    if (e.status === 1) groupStatus = 1;
+  }
+  result.push({ timestamp: groupStart, status: groupStatus });
+  return result;
+}
+
+// Обновлённая функция для показа графика с учётом режима
 async function showWorkerChart(workerName) {
   // Получаем данные простоев по воркеру с backend
   const res = await fetch(`/api/workers/${encodeURIComponent(workerName)}/downtime`);
-  const data = await res.json();
+  let data = await res.json();
+  // Сохраняем оригинальные данные для повторного построения
+  window._workerChartRaw = data;
   // Открываем модалку и строим график
   const modal = new bootstrap.Modal(document.getElementById('workerChartModal'));
   modal.show();
-  drawWorkerChart(data);
+  drawWorkerChartWithMode(data, 'agg10');
+  // Обработчик смены режима
+  const select = document.getElementById('chartModeSelect');
+  select.onchange = function() {
+    drawWorkerChartWithMode(window._workerChartRaw, select.value);
+  };
+}
+
+function drawWorkerChartWithMode(data, mode) {
+  let labels = data.labels;
+  let values = data.values;
+  let events = labels.map((label, i) => ({ timestamp: label, status: values[i] }));
+  if (mode === 'agg10') {
+    events = aggregateEvents(events, 10);
+  } else if (mode === 'agg30') {
+    events = aggregateEvents(events, 30);
+  } else if (mode === 'day') {
+    // Только за последние сутки
+    const now = new Date();
+    events = events.filter(e => (now - new Date(e.timestamp)) < 24*60*60*1000);
+    events = aggregateEvents(events, 10);
+  }
+  // labels всегда строки времени
+  labels = events.map(e =>
+    typeof e.timestamp === 'string'
+      ? e.timestamp
+      : new Date(e.timestamp).toLocaleString('ru-RU')
+  );
+  values = events.map(e => e.status);
+  drawWorkerChart({ labels, values });
 }
 
 function drawWorkerChart(data) {
@@ -133,7 +186,7 @@ function drawWorkerChart(data) {
         fill: false,
         tension: 0.2,
         pointRadius: 4,
-        pointBackgroundColor: data.values.map(v => v === 1 ? '#dc3545' : '#198754'), // красный для offline, зелёный для online
+        pointBackgroundColor: data.values.map(v => v === 1 ? '#dc3545' : '#198754'),
       }]
     },
     options: {
@@ -180,6 +233,22 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 });
+
+// Удаление воркера
+async function deleteWorker(workerName) {
+  if (!confirm(`Удалить воркера ${workerName} из всех записей?`)) return;
+  try {
+    const res = await fetch(`/api/workers/${encodeURIComponent(workerName)}`, { method: 'DELETE' });
+    if (!res.ok) {
+      alert('Ошибка при удалении воркера');
+      return;
+    }
+    await loadWorkers();
+  } catch (e) {
+    alert('Ошибка сети при удалении воркера');
+  }
+}
+window.deleteWorker = deleteWorker;
 
 // Инициализация
 loadWorkers(); 

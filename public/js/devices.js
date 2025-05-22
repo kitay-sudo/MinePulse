@@ -394,6 +394,7 @@ async function deleteDevice(deviceId) {
     showError('Не удалось удалить устройство. Попробуйте позже.');
   }
 }
+window.deleteDevice = deleteDevice;
 
 // API-функции для работы с устройствами
 async function addDevice(deviceData) {
@@ -493,7 +494,7 @@ async function showDeviceDetail(deviceId) {
     if (infoBlock) infoBlock.innerHTML = `<div class="alert alert-danger">Ошибка загрузки данных: ${error.message}</div>`;
   }
 }
-
+window.showDeviceDetail = showDeviceDetail;
 
 // Пинг устройства
 async function pingDevice(deviceId) {
@@ -548,6 +549,7 @@ async function pingDevice(deviceId) {
     }
   }
 }
+window.pingDevice = pingDevice;
 
 async function scanNetworkDevices(scanData) {
   // Создаем EventSource для получения обновлений в реальном времени

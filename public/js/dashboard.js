@@ -198,7 +198,6 @@ async function loadMonitoringLastUpdate() {
   try {
     const res = await fetch('/api/settings/monitoring');
     const data = await res.json();
-    console.log('Ответ сервера:', data);
     if (data.monitoringLastUpdate) {
       const dt = new Date(data.monitoringLastUpdate);
       el.textContent = dt.toLocaleString('ru-RU');
@@ -241,7 +240,6 @@ async function loadMonitoringStatus() {
 }
 
 window.toggleMonitoring = async function() {
-  console.log('toggleMonitoring вызвана');
   const btn = document.getElementById('toggleMonitoringBtn');
   if (!btn) return;
   const enabled = btn.dataset.enabled === '1';

@@ -22,7 +22,6 @@ async function loadDeviceModelsCache() {
 
 // Взаимное выключение свитчей "Опрос" и "Ремонт"
 async function toggleDeviceSetting(deviceId, setting, value) {
-  console.log(`toggleDeviceSetting вызвана с параметрами: deviceId=${deviceId}, setting=${setting}, value=${value}`);
   
   const device = allDevices.find(d => d._id === deviceId);
   if (!device) {
@@ -30,8 +29,6 @@ async function toggleDeviceSetting(deviceId, setting, value) {
     showError('Устройство не найдено');
     return;
   }
-
-  console.log(`Устройство найдено:`, device);
 
   // Сохраняем исходные значения для отката
   const originalInRepair = device.inRepair;
@@ -41,26 +38,19 @@ async function toggleDeviceSetting(deviceId, setting, value) {
   if (setting === 'inRepair' && value) {
     device.inRepair = true;
     device.enablePolling = false;
-    console.log('Устройство переведено в режим ремонта, опрос отключен');
   } else if (setting === 'enablePolling' && value) {
     device.enablePolling = true;
     device.inRepair = false;
-    console.log('Опрос включен, режим ремонта отключен');
   } else if (setting === 'inRepair' && !value) {
     device.inRepair = false;
     device.enablePolling = true;
-    console.log('Режим ремонта отключен, опрос включен');
   } else {
     device[setting] = value;
-    console.log(`Установлено ${setting} = ${value}`);
   }
 
   // Обновляем на сервере
   try {
-    console.log('Отправляем запрос на сервер с данными:', {
-      inRepair: device.inRepair,
-      enablePolling: device.enablePolling
-    });
+
 
     const res = await fetch(`/api/devices/${deviceId}/settings`, {
       method: 'PATCH',
@@ -78,13 +68,11 @@ async function toggleDeviceSetting(deviceId, setting, value) {
     }
     
     const updated = await res.json();
-    console.log('Получен ответ от сервера:', updated);
     
     // Обновляем в массиве
     const idx = allDevices.findIndex(d => d._id === deviceId);
     if (idx !== -1) {
       allDevices[idx] = updated;
-      console.log('Устройство обновлено в локальном массиве');
     }
     
     // Немедленно обновляем отображение
@@ -257,8 +245,6 @@ function initDeviceModelSelect(selected = '') {
   defaultOption.textContent = 'Выберите модель...';
   select.appendChild(defaultOption);
   fetch('/api/device-models').then(r=>r.json()).then(models => {
-    // Для отладки
-    console.log('Заполняю select моделей', models);
     // Убираем дубли по имени
     const uniqueModels = [];
     const seenNames = new Set();
@@ -277,7 +263,6 @@ function initDeviceModelSelect(selected = '') {
       select.appendChild(opt);
     });
     // Для отладки
-    console.log('Селект после заполнения:', select.innerHTML, 'Количество опций:', select.options.length);
     select.onchange = function() {
       const model = deviceModelsCache.find(m => m._id === this.value);
       if (model) document.getElementById('deviceConsumption').value = model.consumption;

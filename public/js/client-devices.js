@@ -85,7 +85,6 @@ async function loadClientDevices() {
     }
     
     allDevices = devices;
-    console.log(`Загружено ${allDevices.length} устройств для клиента`);
     
     updateDevicesStatistics();
     applyFilters();
@@ -484,7 +483,6 @@ async function toggleDeviceSetting(deviceId, setting, value) {
     }
     
     const updatedDevice = await response.json();
-    console.log(`Настройка ${setting} устройства ${deviceId} обновлена:`, value);
     
     // Обновляем устройство в локальном массиве
     const deviceIndex = allDevices.findIndex(d => d._id === deviceId);

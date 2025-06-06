@@ -1,6 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import 'dotenv/config';
+import { config } from 'dotenv';
+config(); // Загружаем переменные из .env файла
 import path from 'path';
 import { fileURLToPath } from 'url';
 import DeviceModel from './models/device.js';
@@ -967,9 +968,7 @@ app.get('/api/users/:id/devices', async (req, res) => {
       const parts = worker.split('.');
       return parts[0]; // Берем часть до первой точки
     });
-    
-    console.log(`Поиск устройств для клиента ${user.fio}, базы воркеров:`, workerBases);
-    
+        
     // Находим все устройства, чьи воркеры начинаются с базовых частей клиента
     const devices = await DeviceModel.find({
       worker: { $exists: true, $ne: null, $ne: '' }
@@ -982,9 +981,7 @@ app.get('/api/users/:id/devices', async (req, res) => {
       // Проверяем, начинается ли воркер устройства с одной из базовых частей клиента
       return workerBases.some(base => device.worker.startsWith(base + '.'));
     });
-    
-    console.log(`Найдено ${clientDevices.length} устройств для клиента ${user.fio}`);
-    
+        
     // Добавляем время простоя для каждого устройства (как в основном API)
     const result = clientDevices.map(dev => {
       let downtime = 0;

@@ -17,15 +17,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Автоматически запускаем показ устройств надежным методом после небольшой задержки
   setTimeout(() => {
-    console.log('Автоматическая загрузка устройств...');
     
     // Используем альтернативный метод загрузки для надежности
     displayApiDataInTable().then(success => {
-      console.log('Результат автоматической загрузки:', success ? 'успешно' : 'с ошибкой');
       
       // Если не получилось, пробуем обычную загрузку
       if (!success) {
-        console.log('Пробуем обычную загрузку устройств...');
         loadDevices();
       }
     });
@@ -139,7 +136,6 @@ async function fetchReport(from, to) {
 // Тестирование доступности API. Вставьте в конец файла.
 async function testApiEndpoint() {
   try {
-    console.log('Тестирование API...');
     
     // Создаем уведомление о процессе
     const notification = document.createElement('div');
@@ -152,22 +148,16 @@ async function testApiEndpoint() {
     document.body.appendChild(notification);
     
     // Тестируем API устройств
-    console.log('Тестирование эндпоинта /api/devices/full...');
     const resp = await fetch('/api/devices/full');
-    console.log(`Статус ответа: ${resp.status} ${resp.statusText}`);
     
     if (resp.ok) {
       // Получаем тело ответа
       const text = await resp.text();
-      console.log(`Получен ответ длиной ${text.length} символов`);
       notification.innerHTML = `Получен ответ от API (${text.length} символов)`;
       
       try {
         // Пробуем распарсить как JSON
         const json = JSON.parse(text);
-        console.log('JSON корректен, распарсен успешно');
-        console.log('Количество устройств в ответе:', Array.isArray(json) ? json.length : 'Данные не являются массивом');
-        console.log('Тип данных:', Array.isArray(json) ? 'массив' : typeof json);
         
         // Если получен массив с устройствами, отображаем их в таблице
         if (Array.isArray(json) && json.length > 0) {
@@ -225,7 +215,6 @@ async function testApiEndpoint() {
 // Отображение устройств из отладочного API в текстовом формате
 async function showDebugText() {
   try {
-    console.log('Получение отладочных данных в текстовом формате...');
     
     // Создаем всплывающее окно для отображения результата
     const modal = document.createElement('div');
@@ -280,7 +269,6 @@ async function showDebugText() {
     // Обновляем содержимое
     content.textContent = text;
     
-    console.log('Отладочные данные в текстовом формате загружены');
   } catch (error) {
     console.error('Ошибка при получении отладочных данных:', error);
     showError(`Ошибка при получении отладочных данных: ${error.message}`);
@@ -290,7 +278,6 @@ async function showDebugText() {
 // Отображение устройств из отладочного API в формате JSON
 async function showDebugJson() {
   try {
-    console.log('Получение отладочных данных в формате JSON...');
     
     // Создаем всплывающее окно для отображения результата
     const modal = document.createElement('div');
@@ -348,7 +335,6 @@ async function showDebugJson() {
     // Добавляем информацию о количестве устройств
     header.textContent = `Отладочная информация: ${json.length} устройств`;
     
-    console.log('Отладочные данные в формате JSON загружены');
   } catch (error) {
     console.error('Ошибка при получении отладочных данных:', error);
     showError(`Ошибка при получении отладочных данных: ${error.message}`);

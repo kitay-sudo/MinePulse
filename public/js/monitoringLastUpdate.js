@@ -16,7 +16,6 @@ async function loadMonitoringLastUpdate() {
   try {
     const res = await fetch('/api/settings/monitoring');
     const data = await res.json();
-    console.log('Ответ сервера:', data);
     if (data.monitoringLastUpdate) {
       const dt = new Date(data.monitoringLastUpdate);
       el.textContent = dt.toLocaleString('ru-RU');

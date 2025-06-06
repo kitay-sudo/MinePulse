@@ -16,6 +16,7 @@ import DeviceModelModel from './models/deviceModel.js';
 import User from './models/user.js';
 import Invoice from './models/invoice.js';
 import { logger } from './utils/logger.js';
+import os from 'os';
 
 process.removeAllListeners('warning');
 process.on('warning', e => {
@@ -58,6 +59,11 @@ app.get('/', (req, res) => {
 // Новый маршрут для Bootstrap-версии дашборда
 app.get('/bootstrap', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard_bootstrap.html'));
+});
+
+// Маршрут для страницы устройств клиента
+app.get('/client-devices.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'client-devices.html'));
 });
 
 // История простоев/онлайна по устройству
@@ -792,6 +798,21 @@ app.get('/api/users', async (req, res) => {
   const users = await User.find();
   res.json(users);
 });
+
+// Получить данные одного пользователя по ID
+app.get('/api/users/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+    res.json(user);
+  } catch (error) {
+    logger.error('Ошибка получения пользователя:', error);
+    res.status(500).json({ error: 'Ошибка сервера при получении пользователя' });
+  }
+});
+
 // Добавить пользователя
 app.post('/api/users', express.json(), async (req, res) => {
   try {
@@ -802,6 +823,7 @@ app.post('/api/users', express.json(), async (req, res) => {
     res.status(400).json({ error: e.message });
   }
 });
+
 // Редактировать пользователя
 app.put('/api/users/:id', express.json(), async (req, res) => {
   try {
@@ -811,21 +833,25 @@ app.put('/api/users/:id', express.json(), async (req, res) => {
     res.status(400).json({ error: e.message });
   }
 });
+
 // Удалить пользователя
 app.delete('/api/users/:id', async (req, res) => {
   await User.findByIdAndDelete(req.params.id);
   res.json({ success: true });
 });
+
 // Архивировать пользователя
 app.patch('/api/users/:id/archive', async (req, res) => {
   const user = await User.findByIdAndUpdate(req.params.id, { archived: true }, { new: true });
   res.json(user);
 });
+
 // Разархивировать пользователя
 app.patch('/api/users/:id/unarchive', async (req, res) => {
   const user = await User.findByIdAndUpdate(req.params.id, { archived: false }, { new: true });
   res.json(user);
 });
+
 // Отправить сообщение в Telegram (заглушка)
 app.post('/api/users/:id/telegram', async (req, res) => {
   try {
@@ -840,6 +866,7 @@ app.post('/api/users/:id/telegram', async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+
 // Генерация счёта (заглушка)
 app.post('/api/users/:id/invoice', async (req, res) => {
   // Здесь будет логика генерации счёта
@@ -918,6 +945,64 @@ app.delete('/api/workers/:worker', async (req, res) => {
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ error: 'Ошибка при удалении воркера' });
+  }
+});
+
+// Получить устройства клиента по ID
+app.get('/api/users/:id/devices', async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+    
+    if (!user.workers || user.workers.length === 0) {
+      return res.json([]); // Возвращаем пустой массив если у клиента нет воркеров
+    }
+    
+    // Получаем базовые части воркеров (до первой точки)
+    const workerBases = user.workers.map(worker => {
+      const parts = worker.split('.');
+      return parts[0]; // Берем часть до первой точки
+    });
+    
+    console.log(`Поиск устройств для клиента ${user.fio}, базы воркеров:`, workerBases);
+    
+    // Находим все устройства, чьи воркеры начинаются с базовых частей клиента
+    const devices = await DeviceModel.find({
+      worker: { $exists: true, $ne: null, $ne: '' }
+    });
+    
+    // Фильтруем устройства по воркерам клиента
+    const clientDevices = devices.filter(device => {
+      if (!device.worker) return false;
+      
+      // Проверяем, начинается ли воркер устройства с одной из базовых частей клиента
+      return workerBases.some(base => device.worker.startsWith(base + '.'));
+    });
+    
+    console.log(`Найдено ${clientDevices.length} устройств для клиента ${user.fio}`);
+    
+    // Добавляем время простоя для каждого устройства (как в основном API)
+    const result = clientDevices.map(dev => {
+      let downtime = 0;
+      if (dev.events && dev.events.length > 0) {
+        for (let i = dev.events.length - 1; i >= 0; i--) {
+          if (dev.events[i].status === 1) downtime++;
+          else break;
+        }
+      }
+      const deviceObj = dev.toObject();
+      deviceObj.currentDowntimeMinutes = downtime;
+      return deviceObj;
+    });
+    
+    res.json(result);
+  } catch (error) {
+    logger.error('Ошибка получения устройств клиента:', error);
+    res.status(500).json({ error: 'Ошибка сервера при получении устройств клиента' });
   }
 });
 

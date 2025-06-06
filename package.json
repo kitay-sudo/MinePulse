@@ -7,8 +7,12 @@
     "start": "node app.js"
   },
   "dependencies": {
+    "bootstrap": "^5.3.6",
     "dotenv": "^16.0.3",
+    "express": "^5.1.0",
     "mongoose": "^7.0.0",
+    "node-fetch": "^3.3.2",
+    "p-limit": "^6.2.0",
     "ping": "^0.4.0"
   }
 }

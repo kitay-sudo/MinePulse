@@ -54,9 +54,14 @@ function renderUsers() {
   const pageUsers = filtered.slice(start, end);
   tbody.innerHTML = pageUsers.map(u => {
     const stats = getUserDeviceStats(u);
+    // Создаем ссылку на страницу устройств клиента, если это клиент и у него есть воркеры
+    const fioDisplay = u.role === 'Клиент' && u.workers && u.workers.length > 0 
+      ? `<a href="/client-devices.html?id=${u._id}" class="text-decoration-none text-primary" title="Посмотреть устройства клиента">${u.fio}</a>`
+      : u.fio;
+    
     return `
     <tr>
-      <td>${u.fio}</td>
+      <td>${fioDisplay}</td>
       <td>${u.email || u.telegramId}</td>
       <td>${u.tariff}</td>
       <td>${u.role}</td>

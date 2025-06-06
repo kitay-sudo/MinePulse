@@ -20,6 +20,96 @@ async function loadDeviceModelsCache() {
   deviceModelsCache = await res.json();
 }
 
+// Взаимное выключение свитчей "Опрос" и "Ремонт"
+async function toggleDeviceSetting(deviceId, setting, value) {
+  console.log(`toggleDeviceSetting вызвана с параметрами: deviceId=${deviceId}, setting=${setting}, value=${value}`);
+  
+  const device = allDevices.find(d => d._id === deviceId);
+  if (!device) {
+    console.error(`Устройство с ID ${deviceId} не найдено`);
+    showError('Устройство не найдено');
+    return;
+  }
+
+  console.log(`Устройство найдено:`, device);
+
+  // Сохраняем исходные значения для отката
+  const originalInRepair = device.inRepair;
+  const originalEnablePolling = device.enablePolling;
+
+  // Локально меняем значения
+  if (setting === 'inRepair' && value) {
+    device.inRepair = true;
+    device.enablePolling = false;
+    console.log('Устройство переведено в режим ремонта, опрос отключен');
+  } else if (setting === 'enablePolling' && value) {
+    device.enablePolling = true;
+    device.inRepair = false;
+    console.log('Опрос включен, режим ремонта отключен');
+  } else if (setting === 'inRepair' && !value) {
+    device.inRepair = false;
+    device.enablePolling = true;
+    console.log('Режим ремонта отключен, опрос включен');
+  } else {
+    device[setting] = value;
+    console.log(`Установлено ${setting} = ${value}`);
+  }
+
+  // Обновляем на сервере
+  try {
+    console.log('Отправляем запрос на сервер с данными:', {
+      inRepair: device.inRepair,
+      enablePolling: device.enablePolling
+    });
+
+    const res = await fetch(`/api/devices/${deviceId}/settings`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        inRepair: device.inRepair,
+        enablePolling: device.enablePolling
+      })
+    });
+    
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('Ошибка ответа сервера:', res.status, errorText);
+      throw new Error(`Ошибка обновления устройства: ${res.status}`);
+    }
+    
+    const updated = await res.json();
+    console.log('Получен ответ от сервера:', updated);
+    
+    // Обновляем в массиве
+    const idx = allDevices.findIndex(d => d._id === deviceId);
+    if (idx !== -1) {
+      allDevices[idx] = updated;
+      console.log('Устройство обновлено в локальном массиве');
+    }
+    
+    // Немедленно обновляем отображение
+    applyFilters();
+    updateDevicesStatistics();
+    renderDevices();
+    
+    showSuccess('Настройки устройства обновлены');
+  } catch (e) {
+    console.error('Ошибка при обновлении устройства:', e);
+    
+    // Откатываем локальные изменения
+    device.inRepair = originalInRepair;
+    device.enablePolling = originalEnablePolling;
+    
+    showError(`Ошибка обновления устройства: ${e.message}`);
+    
+    // Перерендериваем с откатом
+    renderDevices();
+  }
+}
+
+// Экспортируем функцию в глобальную область видимости
+window.toggleDeviceSetting = toggleDeviceSetting;
+
 // Инициализация модульных элементов при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
   // Инициализируем модальное окно для графика
@@ -216,6 +306,9 @@ function updateDevicesStatistics() {
   // Обновляем общее потребление
   updateTotalConsumption();
 }
+
+// Экспортируем функцию в глобальную область видимости
+window.updateDevicesStatistics = updateDevicesStatistics;
 
 // Отображение списка устройств для селекта
 function renderDevicesList() {
@@ -653,6 +746,9 @@ function applyFilters() {
   renderDevices();
 }
 
+// Экспортируем функцию в глобальную область видимости
+window.applyFilters = applyFilters;
+
 // Отрисовка панели пагинации
 function renderPagination() {
   const totalPages = Math.ceil(filteredDevices.length / itemsPerPage);
@@ -873,6 +969,9 @@ function renderDevices() {
   }).join('');
 }
 
+// Экспортируем функцию в глобальную область видимости
+window.renderDevices = renderDevices;
+
 function resetAllFilters() {
   document.getElementById('statusFilter').value = 'all';
   document.getElementById('repairFilter').value = 'all';
@@ -892,49 +991,6 @@ function updateTotalConsumption() {
   const total = (devices || []).reduce((sum, d) => sum + (d.consumption || 0), 0);
   const el = document.getElementById('totalConsumption');
   if (el) el.textContent = total + ' Вт';
-}
-
-// Взаимное выключение свитчей "Опрос" и "Ремонт"
-async function toggleDeviceSetting(deviceId, setting, value) {
-  const device = allDevices.find(d => d._id === deviceId);
-  if (!device) return;
-
-  // Локально меняем значения
-  if (setting === 'inRepair' && value) {
-    device.inRepair = true;
-    device.enablePolling = false;
-  } else if (setting === 'enablePolling' && value) {
-    device.enablePolling = true;
-    device.inRepair = false;
-  } else if (setting === 'inRepair' && !value) {
-    device.inRepair = false;
-    device.enablePolling = true;
-  } else {
-    device[setting] = value;
-  }
-
-  // Обновляем на сервере
-  try {
-    const res = await fetch(`/api/devices/${deviceId}/settings`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        inRepair: device.inRepair,
-        enablePolling: device.enablePolling
-      })
-    });
-    if (!res.ok) throw new Error('Ошибка обновления устройства');
-    const updated = await res.json();
-    // Обновляем в массиве
-    const idx = allDevices.findIndex(d => d._id === deviceId);
-    if (idx !== -1) allDevices[idx] = updated;
-    applyFilters();
-    updateDevicesStatistics();
-  } catch (e) {
-    showError('Ошибка обновления устройства');
-    // Откатываем локально
-    await loadDevices();
-  }
 }
 
 // Добавляю функцию для сброса формы и состояния при создании нового устройства

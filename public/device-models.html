@@ -27,7 +27,7 @@
         <thead>
           <tr>
             <th>Название</th>
-            <th>Потребление (Вт)</th>
+            <th>Потребление (КВт)</th>
             <th>Th/s</th>
             <th style="width:60px;">Действия</th>
           </tr>
@@ -53,12 +53,12 @@
               <input type="text" class="form-control" id="modelName" required>
             </div>
             <div class="mb-3">
-              <label for="modelConsumption" class="form-label">Потребление (Вт)</label>
-              <input type="number" class="form-control" id="modelConsumption" required min="0">
+              <label for="modelConsumption" class="form-label">Потребление (КВт)</label>
+              <input type="text" class="form-control" id="modelConsumption" required min="0">
             </div>
             <div class="mb-3">
               <label for="modelThs" class="form-label">Th/s (терахеш)</label>
-              <input type="number" class="form-control" id="modelThs" step="0.01" min="0">
+              <input type="number" class="form-control" id="modelThs" min="0">
             </div>
             <div class="text-end">
               <button type="submit" class="btn btn-success">Сохранить</button>
